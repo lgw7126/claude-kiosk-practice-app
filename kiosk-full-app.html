@@ -1,0 +1,2341 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=390,initial-scale=1.0"/>
+<title>키오스크 연습 앱</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --primary:#6750A4; --on-primary:#fff;
+  --primary-container:#EADDFF; --on-primary-container:#21005D;
+  --secondary:#625B71; --secondary-container:#E8DEF8; --on-secondary-container:#1D192B;
+  --tertiary:#7D5260; --tertiary-container:#FFD8E4; --on-tertiary-container:#31111D;
+  --error:#B3261E; --error-container:#F9DEDC;
+  --bg:#FFFBFE; --surface:#FFFBFE; --surface-variant:#E7E0EC;
+  --on-surface:#1D1B20; --on-surface-variant:#49454F;
+  --outline:#79747E; --outline-variant:#CAC4D0;
+  --food-primary:#1B5E20; --food-bg:#E8F5E9; --food-accent:#2E7D32;
+  --hosp-primary:#0D47A1; --hosp-bg:#E3F2FD; --hosp-accent:#1565C0;
+  --trans-primary:#E65100; --trans-bg:#FFF3E0; --trans-accent:#EF6C00;
+  --atm-primary:#1A1F3B; --atm-bg:#FFF8E7; --atm-accent:#FFB800; --kb-yellow:#FFB800; --kb-dark:#1A1F3B;
+  --gov-primary:#01579B; --gov-bg:#E1F5FE; --gov-accent:#0277BD;
+  --park-primary:#33691E; --park-bg:#F1F8E9; --park-accent:#558B2F;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Roboto',sans-serif;background:#F3EDF7;display:flex;justify-content:center;min-height:100vh;}
+.phone{width:390px;min-height:100vh;background:var(--bg);position:relative;overflow:hidden;display:flex;flex-direction:column;}
+
+/* ── SCREENS ── */
+.screen{display:none;flex-direction:column;flex:1;height:100%;position:absolute;inset:0;background:var(--bg);overflow:hidden;}
+.screen.active{display:flex;}
+
+/* ── HOME ── */
+.home-top{background:var(--primary);padding:22px 20px 20px;color:#fff;}
+.home-top-row{display:flex;justify-content:space-between;align-items:center;}
+.home-title{font-size:22px;font-weight:700;}
+.home-sub{font-size:13px;opacity:.85;margin-top:3px;}
+.avatar-btn{width:46px;height:46px;border-radius:50%;background:var(--primary-container);color:var(--primary);font-size:20px;font-weight:700;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.home-scroll{flex:1;overflow-y:auto;padding-bottom:20px;}
+.hero{margin:16px;background:linear-gradient(135deg,var(--primary-container),#D0BCFF);border-radius:24px;padding:22px 20px;position:relative;overflow:hidden;}
+.hero::after{content:'🏛️';position:absolute;right:14px;bottom:8px;font-size:56px;opacity:.2;}
+.hero-greeting{font-size:13px;color:var(--on-primary-container);font-weight:500;}
+.hero-title{font-size:22px;font-weight:700;color:var(--on-primary-container);margin-top:4px;line-height:1.35;}
+.hero-desc{font-size:13px;color:var(--on-primary-container);opacity:.75;margin-top:6px;line-height:1.5;}
+.sec-hd{padding:18px 16px 8px;display:flex;justify-content:space-between;align-items:center;}
+.sec-title{font-size:17px;font-weight:700;color:var(--on-surface);}
+.kiosk-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px;}
+.k-card{border-radius:20px;padding:20px 16px 18px;cursor:pointer;border:none;text-align:left;transition:transform .13s,box-shadow .13s;box-shadow:0 2px 8px rgba(0,0,0,.07);position:relative;overflow:hidden;}
+.k-card:active{transform:scale(.95);box-shadow:0 1px 4px rgba(0,0,0,.1);}
+.k-emoji{font-size:36px;display:block;}
+.k-name{font-size:16px;font-weight:700;margin-top:10px;line-height:1.3;}
+.k-desc{font-size:12px;margin-top:4px;opacity:.75;}
+.k-badge{position:absolute;top:11px;right:11px;background:rgba(0,0,0,.13);border-radius:9px;font-size:11px;font-weight:700;padding:3px 8px;color:inherit;}
+.k-food{background:var(--food-bg);color:var(--food-primary);}
+.k-hosp{background:var(--hosp-bg);color:var(--hosp-primary);}
+.k-trans{background:var(--trans-bg);color:var(--trans-primary);}
+.k-atm{background:var(--atm-bg);color:var(--atm-primary);}
+.k-gov{background:var(--gov-bg);color:var(--gov-primary);}
+.k-park{background:var(--park-bg);color:var(--park-primary);}
+
+/* ── KIOSK SHELL ── */
+.kiosk-top{padding:0 16px;height:64px;display:flex;align-items:center;gap:12px;border-bottom:1.5px solid var(--outline-variant);flex-shrink:0;}
+.back-btn{width:44px;height:44px;border-radius:50%;background:var(--surface-variant);border:none;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;transition:background .15s;}
+.back-btn:active{background:var(--primary-container);}
+.kiosk-header-title{font-size:18px;font-weight:700;color:var(--on-surface);flex:1;}
+.kiosk-body{flex:1;overflow-y:auto;padding:16px;}
+.kiosk-footer{padding:14px 16px;border-top:1.5px solid var(--outline-variant);background:var(--bg);flex-shrink:0;}
+
+/* ── STEP INDICATOR ── */
+.steps{display:flex;align-items:center;gap:6px;padding:12px 16px 0;}
+.step-dot{width:10px;height:10px;border-radius:50%;background:var(--outline-variant);}
+.step-dot.done{background:var(--primary);}
+.step-dot.active{width:28px;border-radius:5px;background:var(--primary);}
+.step-label{font-size:12px;color:var(--on-surface-variant);margin-left:8px;font-weight:500;}
+
+/* ── GUIDE CHIP ── */
+.guide-chip{background:var(--primary-container);border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:14px;color:var(--on-primary-container);font-weight:500;display:flex;align-items:center;gap:8px;line-height:1.45;}
+.guide-chip span{font-size:20px;}
+
+/* ── BIG BUTTON ── */
+.btn-primary{width:100%;background:var(--primary);color:#fff;border:none;border-radius:50px;padding:18px;font-size:18px;font-weight:700;font-family:'Roboto',sans-serif;cursor:pointer;letter-spacing:.3px;box-shadow:0 4px 14px rgba(103,80,164,.3);transition:transform .13s;}
+.btn-primary:active{transform:scale(.97);}
+.btn-primary:disabled{background:var(--outline-variant);box-shadow:none;cursor:default;}
+.btn-secondary{width:100%;background:transparent;color:var(--primary);border:2px solid var(--primary);border-radius:50px;padding:16px;font-size:17px;font-weight:700;font-family:'Roboto',sans-serif;cursor:pointer;margin-top:10px;transition:background .13s;}
+.btn-secondary:active{background:var(--primary-container);}
+
+/* ── OPTION LIST ── */
+.opt-list{display:flex;flex-direction:column;gap:10px;}
+.opt-item{display:flex;align-items:center;gap:14px;background:var(--surface-variant);border-radius:16px;padding:16px 18px;cursor:pointer;border:2px solid transparent;transition:border-color .15s,background .15s;font-family:'Roboto',sans-serif;text-align:left;width:100%;}
+.opt-item:active,.opt-item.selected{border-color:var(--primary);background:var(--primary-container);}
+.opt-icon{font-size:30px;flex-shrink:0;}
+.opt-info{flex:1;}
+.opt-name{font-size:17px;font-weight:700;color:var(--on-surface);}
+.opt-sub{font-size:13px;color:var(--on-surface-variant);margin-top:2px;}
+.opt-check{font-size:22px;color:var(--primary);opacity:0;transition:opacity .15s;}
+.opt-item.selected .opt-check{opacity:1;}
+
+/* ── NUMPAD ── */
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;}
+.num-key{background:var(--surface-variant);border:none;border-radius:16px;padding:18px 0;font-size:22px;font-weight:700;color:var(--on-surface);cursor:pointer;font-family:'Roboto',sans-serif;transition:background .12s;}
+.num-key:active{background:var(--primary-container);}
+.num-key.del{font-size:18px;}
+.num-key.confirm{background:var(--primary);color:#fff;}
+.num-display{background:var(--surface-variant);border-radius:16px;padding:18px 20px;font-size:28px;font-weight:700;color:var(--on-surface);letter-spacing:12px;text-align:center;margin-bottom:8px;min-height:72px;display:flex;align-items:center;justify-content:center;}
+.num-display .dot{color:var(--on-surface-variant);}
+
+/* ── MENU TABS ── */
+.menu-tabs{display:flex;gap:8px;overflow-x:auto;padding:0 16px 12px;scrollbar-width:none;flex-shrink:0;}
+.menu-tabs::-webkit-scrollbar{display:none;}
+.tab-btn{flex-shrink:0;padding:10px 18px;border-radius:50px;border:2px solid var(--outline-variant);background:transparent;font-size:15px;font-weight:700;color:var(--on-surface-variant);cursor:pointer;font-family:'Roboto',sans-serif;transition:all .15s;}
+.tab-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+
+/* ── MENU ITEMS ── */
+.menu-grid{display:flex;flex-direction:column;gap:10px;}
+.menu-item{display:flex;align-items:center;gap:14px;background:var(--surface-variant);border-radius:18px;padding:14px 16px;cursor:pointer;border:none;text-align:left;width:100%;font-family:'Roboto',sans-serif;transition:background .13s;}
+.menu-item:active{background:var(--primary-container);}
+.menu-item-emoji{font-size:40px;flex-shrink:0;width:52px;text-align:center;}
+.menu-item-info{flex:1;}
+.menu-item-name{font-size:16px;font-weight:700;color:var(--on-surface);}
+.menu-item-desc{font-size:12px;color:var(--on-surface-variant);margin-top:2px;}
+.menu-item-price{font-size:17px;font-weight:700;color:var(--primary);flex-shrink:0;}
+.menu-item-add{background:var(--primary);color:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Roboto',sans-serif;transition:transform .12s;}
+.menu-item-add:active{transform:scale(.9);}
+
+/* ── CART BAR ── */
+.cart-bar{background:var(--primary);color:#fff;border-radius:18px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;margin-top:8px;}
+.cart-count{font-size:14px;font-weight:500;}
+.cart-total{font-size:20px;font-weight:700;}
+.cart-btn{background:#fff;color:var(--primary);border:none;border-radius:12px;padding:10px 18px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Roboto',sans-serif;}
+
+/* ── CART ITEM LIST ── */
+.cart-list{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
+.cart-item{display:flex;align-items:center;gap:12px;background:var(--surface-variant);border-radius:16px;padding:14px 16px;}
+.cart-item-emoji{font-size:32px;}
+.cart-item-info{flex:1;}
+.cart-item-name{font-size:16px;font-weight:700;color:var(--on-surface);}
+.cart-item-price{font-size:14px;color:var(--on-surface-variant);}
+.cart-item-qty{display:flex;align-items:center;gap:10px;}
+.qty-btn{width:34px;height:34px;border-radius:50%;background:var(--primary-container);color:var(--primary);border:none;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;}
+.qty-num{font-size:18px;font-weight:700;color:var(--on-surface);min-width:24px;text-align:center;}
+
+/* ── RECEIPT ── */
+.receipt{background:#fff;border:2px dashed var(--outline-variant);border-radius:20px;padding:24px 20px;text-align:center;}
+.receipt-icon{font-size:64px;}
+.receipt-title{font-size:22px;font-weight:700;color:var(--on-surface);margin-top:12px;}
+.receipt-num{font-size:36px;font-weight:900;color:var(--primary);margin:8px 0;}
+.receipt-sub{font-size:15px;color:var(--on-surface-variant);line-height:1.5;}
+.receipt-divider{border:none;border-top:2px dashed var(--outline-variant);margin:16px 0;}
+.receipt-row{display:flex;justify-content:space-between;font-size:15px;color:var(--on-surface);margin:6px 0;}
+.receipt-row.total{font-size:18px;font-weight:700;color:var(--primary);}
+
+/* ── NUMBER TICKET ── */
+.ticket{background:linear-gradient(135deg,var(--primary-container),#D0BCFF);border-radius:24px;padding:28px 20px;text-align:center;margin-bottom:16px;}
+.ticket-label{font-size:14px;color:var(--on-primary-container);font-weight:500;}
+.ticket-number{font-size:72px;font-weight:900;color:var(--primary);line-height:1;}
+.ticket-sub{font-size:14px;color:var(--on-primary-container);margin-top:8px;opacity:.8;}
+.wait-info{background:var(--surface-variant);border-radius:16px;padding:16px;display:flex;gap:12px;align-items:center;margin-bottom:14px;}
+
+/* ── KB ATM STYLES ── */
+.kb-standby{background:#FFB800;padding:0 20px 28px;flex-shrink:0;}
+.kb-star-logo{font-size:48px;color:#1A1F3B;text-align:center;padding-top:36px;}
+.kb-brand-name{font-size:28px;font-weight:900;color:#1A1F3B;text-align:center;margin-top:4px;}
+.kb-brand-sub{font-size:13px;color:#1A1F3B;opacity:.7;text-align:center;margin-top:2px;}
+.kb-insert-area{background:rgba(0,0,0,.13);border-radius:20px;padding:24px 20px;margin-top:22px;text-align:center;}
+.kb-insert-arrow{font-size:32px;color:#1A1F3B;animation:bounce 1.2s infinite;}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.kb-insert-msg{font-size:22px;font-weight:900;color:#1A1F3B;margin-top:8px;}
+.kb-insert-sub{font-size:13px;color:#1A1F3B;opacity:.75;margin-top:6px;}
+.kb-clock-area{text-align:center;margin-top:14px;font-size:16px;font-weight:700;color:#1A1F3B;}
+.kb-top{background:#FFB800;padding:0 16px;height:64px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.kb-top-logo{font-size:17px;font-weight:900;color:#1A1F3B;flex:1;}
+.kb-top-time{font-size:12px;font-weight:700;color:#1A1F3B;opacity:.8;}
+.kb-top-tag{background:#1A1F3B;color:#FFB800;border-radius:8px;font-size:12px;font-weight:700;padding:4px 10px;}
+.kb-back{background:rgba(0,0,0,.15)!important;color:#1A1F3B!important;}
+.kb-card{background:linear-gradient(135deg,#FFB800,#E65C00);border-radius:18px;padding:20px 20px 18px;color:#1A1F3B;margin-bottom:16px;box-shadow:0 6px 20px rgba(230,92,0,.3);}
+.kb-card-bank{font-size:15px;font-weight:900;}
+.kb-card-chip{font-size:20px;margin-top:10px;letter-spacing:-2px;}
+.kb-card-num{font-size:16px;font-weight:700;letter-spacing:3px;margin-top:10px;}
+.kb-card-name{font-size:14px;font-weight:700;}
+.kb-pin-label{font-size:15px;font-weight:600;color:var(--on-surface);text-align:center;margin-bottom:12px;}
+.kb-pin-dots{display:flex;gap:16px;justify-content:center;margin-bottom:16px;}
+.kb-pin-dot{width:22px;height:22px;border-radius:50%;background:var(--outline-variant);border:2px solid var(--outline);transition:all .2s;}
+.kb-pin-dot.filled{background:#FFB800;border-color:#E65C00;transform:scale(1.15);}
+.kb-numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.kb-num-key{background:var(--surface-variant);border:1.5px solid var(--outline-variant);border-radius:14px;padding:18px 0;font-size:20px;font-weight:700;color:var(--on-surface);cursor:pointer;font-family:'Roboto',sans-serif;transition:background .12s;}
+.kb-num-key:active{background:#FFF8E7;border-color:#FFB800;}
+.kb-num-key.kb-del{font-size:15px;background:#F9DEDC;color:var(--error);border-color:#F9DEDC;}
+.kb-num-key.kb-confirm-key{background:#FFB800;color:#1A1F3B;border-color:#FFB800;font-size:15px;font-weight:900;}
+.kb-num-key.kb-empty{background:transparent;border:none;cursor:default;}
+.kb-section-title{font-size:17px;font-weight:700;color:var(--on-surface);margin-bottom:14px;}
+.kb-section-label{font-size:14px;font-weight:600;color:var(--on-surface-variant);margin-bottom:8px;}
+.kb-tx-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.kb-tx-btn{background:#FFF8E7;border:2px solid #FFB800;border-radius:18px;padding:22px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .13s;font-family:'Roboto',sans-serif;}
+.kb-tx-btn:active{background:#FFB800;transform:scale(.96);}
+.kb-tx-icon{font-size:30px;}
+.kb-tx-name{font-size:16px;font-weight:700;color:#1A1F3B;}
+.kb-account-btn{display:flex;align-items:center;justify-content:space-between;background:var(--surface-variant);border-radius:16px;padding:16px 18px;cursor:pointer;border:2.5px solid transparent;font-family:'Roboto',sans-serif;transition:all .13s;width:100%;}
+.kb-account-btn:active,.kb-account-btn.selected{border-color:#FFB800;background:#FFF8E7;}
+.kb-acc-type{font-size:16px;font-weight:700;color:var(--on-surface);}
+.kb-acc-num{font-size:13px;color:var(--on-surface-variant);margin-top:2px;}
+.kb-acc-bal{font-size:17px;font-weight:700;color:#1A1F3B;text-align:right;}
+.kb-acc-check{font-size:20px;color:#FFB800;opacity:0;margin-top:2px;text-align:right;}
+.kb-account-btn.selected .kb-acc-check{opacity:1;}
+.kb-note-row{display:flex;align-items:center;justify-content:space-between;background:var(--surface-variant);border-radius:14px;padding:12px 14px;margin-bottom:12px;}
+.kb-note-label{font-size:14px;font-weight:600;color:var(--on-surface);}
+.kb-note-btn{padding:8px 14px;border-radius:10px;border:2px solid var(--outline-variant);background:#fff;font-size:13px;font-weight:700;color:var(--on-surface);cursor:pointer;font-family:'Roboto',sans-serif;transition:all .13s;}
+.kb-note-btn.selected{background:#FFB800;border-color:#FFB800;color:#1A1F3B;}
+.kb-amount-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px;}
+.kb-amount-btn{background:#FFF8E7;border:2px solid #FFB800;border-radius:14px;padding:16px 8px;font-size:16px;font-weight:700;color:#1A1F3B;cursor:pointer;font-family:'Roboto',sans-serif;transition:all .13s;}
+.kb-amount-btn:active,.kb-amount-btn.selected{background:#FFB800;color:#1A1F3B;transform:scale(.97);}
+.kb-direct-btn{grid-column:span 2;font-size:15px;border-style:dashed;}
+.kb-amt-display{background:#1A1F3B;border-radius:14px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;}
+.kb-amt-label{font-size:14px;color:rgba(255,255,255,.7);font-weight:500;}
+.kb-amt-val{font-size:20px;font-weight:700;color:#FFB800;}
+.kb-confirm-box{background:#FFF8E7;border:2px solid #FFB800;border-radius:18px;padding:18px;margin-bottom:14px;}
+.kb-confirm-title{font-size:15px;font-weight:700;color:#1A1F3B;margin-bottom:12px;text-align:center;}
+.kb-confirm-type{font-size:22px;font-weight:900;color:#1A1F3B;text-align:center;margin-bottom:14px;}
+.kb-confirm-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.08);font-size:15px;color:var(--on-surface);}
+.kb-confirm-row:last-child{border-bottom:none;}
+.kb-confirm-highlight{color:#E65C00;font-weight:900;font-size:18px;}
+.kb-done-area{text-align:center;padding:24px 0 16px;}
+.kb-done-check{width:70px;height:70px;background:#FFB800;border-radius:50%;font-size:36px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;color:#1A1F3B;font-weight:900;}
+.kb-done-title{font-size:22px;font-weight:700;color:var(--on-surface);}
+.kb-done-sub{font-size:14px;color:var(--on-surface-variant);margin-top:4px;}
+.kb-receipt-q{font-size:16px;font-weight:700;color:var(--on-surface);margin:14px 0 10px;text-align:center;}
+.kb-yn-btn{flex:1;padding:16px;background:#FFB800;border:none;border-radius:14px;font-size:17px;font-weight:900;color:#1A1F3B;cursor:pointer;font-family:'Roboto',sans-serif;transition:transform .12s;}
+.kb-yn-btn:active{transform:scale(.97);}
+.kb-yn-no{background:var(--surface-variant);color:var(--on-surface);}
+.kb-btn{background:#FFB800!important;color:#1A1F3B!important;box-shadow:0 4px 14px rgba(255,184,0,.4)!important;}
+.kb-balance-card{background:linear-gradient(135deg,#1A1F3B,#2D3561);border-radius:18px;padding:20px;color:#fff;margin-bottom:10px;}
+.kb-balance-bank{font-size:13px;opacity:.8;font-weight:500;}
+.kb-balance-num{font-size:14px;margin-top:4px;opacity:.7;}
+.kb-balance-amount{font-size:30px;font-weight:900;color:#FFB800;margin-top:10px;}
+.kb-balance-amount span{font-size:15px;}
+.kb-bank-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.kb-bank-btn{background:var(--surface-variant);border:2px solid transparent;border-radius:12px;padding:14px 0;font-size:15px;font-weight:700;color:var(--on-surface);cursor:pointer;font-family:'Roboto',sans-serif;transition:all .13s;}
+.kb-bank-btn.selected{background:#FFF8E7;border-color:#FFB800;color:#1A1F3B;}
+.kb-bank-btn:active{background:#FFB800;color:#1A1F3B;}
+.kb-acc-input-wrap{background:var(--surface-variant);border-radius:12px;padding:14px 16px;margin-bottom:10px;}
+.kb-acc-input-display{font-size:20px;font-weight:700;color:var(--on-surface);letter-spacing:2px;text-align:center;min-height:36px;}
+.kb-transfer-numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.kb-cash-area{background:#FFF8E7;border:2px dashed #FFB800;border-radius:18px;padding:28px 20px;margin-bottom:14px;text-align:center;}
+.kb-highlight{color:#E65C00!important;}
+
+/* ── KB ATM MENU GRID ── */
+.kb-menu-item{background:var(--surface-variant);border:2px solid transparent;border-radius:14px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;transition:all .13s;font-family:'Roboto',sans-serif;width:100%;}
+.kb-menu-item:active{transform:scale(.95);background:var(--primary-container);}
+.kb-menu-highlight{background:#FFF8E7;border-color:#FFB800;}
+.kb-menu-icon{font-size:26px;}
+.kb-menu-name{font-size:13px;font-weight:700;color:var(--on-surface);}
+.kb-menu-highlight .kb-menu-name{color:#1A1F3B;font-size:14px;}
+/* ── KB 4-ENTRY BUTTONS ── */
+.kb-entry-btn{border:none;border-radius:20px;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:transform .12s;min-height:100px;}
+.kb-entry-btn:active{transform:scale(.95);}
+
+/* ── AMOUNT GRID (kept for other kiosks) ── */
+.amount-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.amount-btn{background:var(--surface-variant);border:2px solid transparent;border-radius:16px;padding:18px 10px;font-size:16px;font-weight:700;color:var(--on-surface);cursor:pointer;font-family:'Roboto',sans-serif;transition:all .13s;}
+.amount-btn:active,.amount-btn.selected{border-color:var(--primary);background:var(--primary-container);color:var(--primary);}
+
+/* ── PLATE INPUT ── */
+.plate-display{background:var(--surface-variant);border-radius:16px;padding:20px;text-align:center;margin-bottom:12px;}
+.plate-label{font-size:13px;color:var(--on-surface-variant);margin-bottom:6px;}
+.plate-number{font-size:32px;font-weight:900;color:var(--on-surface);letter-spacing:4px;min-height:48px;}
+.plate-number .cursor{animation:blink 1s infinite;color:var(--primary);}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+.hangul-pad{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px;}
+.h-key{background:var(--surface-variant);border:none;border-radius:12px;padding:14px 0;font-size:16px;font-weight:700;color:var(--on-surface);cursor:pointer;font-family:'Roboto',sans-serif;transition:background .12s;}
+.h-key:active{background:var(--primary-container);}
+
+/* ── INFO BOX ── */
+.info-box{background:var(--surface-variant);border-radius:16px;padding:16px 18px;margin-bottom:12px;}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--outline-variant);}
+.info-row:last-child{border-bottom:none;}
+.info-key{font-size:14px;color:var(--on-surface-variant);font-weight:500;}
+.info-val{font-size:15px;font-weight:700;color:var(--on-surface);}
+.info-val.highlight{color:var(--primary);}
+
+/* ── STATION SELECTOR ── */
+.station-list{display:flex;flex-direction:column;gap:8px;}
+.station-item{display:flex;align-items:center;justify-content:space-between;background:var(--surface-variant);border-radius:14px;padding:16px 18px;cursor:pointer;border:2px solid transparent;font-family:'Roboto',sans-serif;transition:all .13s;}
+.station-item:active,.station-item.selected{border-color:var(--primary);background:var(--primary-container);}
+.station-name{font-size:17px;font-weight:700;color:var(--on-surface);}
+.station-line{font-size:12px;color:var(--on-surface-variant);margin-top:2px;}
+.station-check{font-size:22px;color:var(--primary);opacity:0;}
+.station-item.selected .station-check{opacity:1;}
+
+/* ── COUNTER ── */
+.counter-row{display:flex;align-items:center;justify-content:space-between;background:var(--surface-variant);border-radius:16px;padding:16px 18px;margin-bottom:10px;}
+.counter-label{font-size:16px;font-weight:600;color:var(--on-surface);}
+.counter-sub{font-size:13px;color:var(--on-surface-variant);}
+.counter-ctrl{display:flex;align-items:center;gap:14px;}
+.c-btn{width:40px;height:40px;border-radius:50%;background:var(--primary-container);color:var(--primary);border:none;font-size:22px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.c-num{font-size:22px;font-weight:700;color:var(--on-surface);min-width:30px;text-align:center;}
+
+/* ── PAYMENT ── */
+.pay-methods{display:flex;flex-direction:column;gap:10px;margin-bottom:12px;}
+.pay-method{display:flex;align-items:center;gap:14px;background:var(--surface-variant);border-radius:16px;padding:18px;cursor:pointer;border:2px solid transparent;font-family:'Roboto',sans-serif;transition:all .13s;}
+.pay-method:active,.pay-method.selected{border-color:var(--primary);background:var(--primary-container);}
+.pay-icon{font-size:32px;}
+.pay-name{font-size:17px;font-weight:700;color:var(--on-surface);}
+.pay-desc{font-size:13px;color:var(--on-surface-variant);}
+.pay-check{font-size:22px;color:var(--primary);margin-left:auto;opacity:0;}
+.pay-method.selected .pay-check{opacity:1;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:#1D1B20;color:#fff;border-radius:12px;padding:13px 22px;font-size:15px;font-weight:500;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;z-index:9999;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── FOOD SCREEN COLORS ── */
+.food-top{background:var(--food-accent);}
+.food-progress .step-dot.done,.food-progress .step-dot.active{background:var(--food-accent);}
+/* ── HOSPITAL COLORS ── */
+.hosp-top{background:var(--hosp-accent);}
+/* ── TRANS COLORS ── */
+.trans-top{background:var(--trans-accent);}
+/* ── ATM COLORS ── */
+.atm-top{background:var(--atm-accent);}
+/* ── GOV COLORS ── */
+.gov-top{background:var(--gov-accent);}
+/* ── PARK COLORS ── */
+.park-top{background:var(--park-accent);}
+
+.kiosk-top.food-top .kiosk-header-title,
+.kiosk-top.hosp-top .kiosk-header-title,
+.kiosk-top.trans-top .kiosk-header-title,
+.kiosk-top.atm-top .kiosk-header-title,
+.kiosk-top.gov-top .kiosk-header-title,
+.kiosk-top.park-top .kiosk-header-title{color:#fff;}
+.kiosk-top .back-btn{background:rgba(255,255,255,.25);color:#fff;}
+
+.total-row{display:flex;justify-content:space-between;align-items:center;background:var(--primary-container);border-radius:14px;padding:16px 18px;margin-bottom:12px;}
+.total-label{font-size:16px;font-weight:600;color:var(--on-primary-container);}
+.total-price{font-size:22px;font-weight:700;color:var(--primary);}
+
+/* scrollbar */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:var(--outline-variant);border-radius:2px;}
+</style>
+</head>
+<body>
+<div class="phone">
+
+<!-- ════════════════ HOME ════════════════ -->
+<div class="screen active" id="s-home">
+  <div class="home-top">
+    <div class="home-top-row">
+      <div>
+        <div class="home-title">📱 키오스크 연습</div>
+        <div class="home-sub">어르신도 쉽게! 차근차근 배워요</div>
+      </div>
+      <button class="avatar-btn" onclick="toast('내 정보 페이지')">김</button>
+    </div>
+  </div>
+  <div class="home-scroll">
+    <div class="hero">
+      <div class="hero-greeting">안녕하세요, 김순자 어르신 👋</div>
+      <div class="hero-title">오늘도 함께<br>연습해볼까요?</div>
+      <div class="hero-desc">실수해도 괜찮아요! 천천히 따라해보세요.</div>
+    </div>
+    <div class="sec-hd"><span class="sec-title">🗂️ 연습할 키오스크를 선택하세요</span></div>
+    <div class="kiosk-grid">
+      <button class="k-card k-food" onclick="go('s-food-0')">
+        <span class="k-emoji">🍔</span><span class="k-badge">인기</span>
+        <div class="k-name">음식 주문</div><div class="k-desc">패스트푸드·카페</div>
+      </button>
+      <button class="k-card k-hosp" onclick="go('s-hosp-1')">
+        <span class="k-emoji">🏥</span>
+        <div class="k-name">병원 접수</div><div class="k-desc">진료·처방·수납</div>
+      </button>
+      <button class="k-card k-trans" onclick="go('s-trans-1')">
+        <span class="k-emoji">🚇</span><span class="k-badge">추천</span>
+        <div class="k-name">지하철 승차권</div><div class="k-desc">지하철 티켓 구매</div>
+      </button>
+      <button class="k-card k-atm" onclick="go('s-atm-0')">
+        <span class="k-emoji">🏧</span>
+        <div class="k-name">ATM 은행</div><div class="k-desc">출금·입금·조회</div>
+      </button>
+      <button class="k-card k-gov" onclick="go('s-gov-1')">
+        <span class="k-emoji">🏛️</span>
+        <div class="k-name">주민센터</div><div class="k-desc">서류 발급·민원</div>
+      </button>
+      <button class="k-card k-park" onclick="go('s-park-1')">
+        <span class="k-emoji">🅿️</span>
+        <div class="k-name">주차 정산</div><div class="k-desc">주차 요금 결제</div>
+      </button>
+    </div>
+    <div style="height:24px;"></div>
+  </div>
+</div>
+
+<!-- ════════════════ FOOD ════════════════ -->
+<!-- FOOD 0: 먹기/포장 선택 (롯데리아 첫 화면) -->
+<div class="screen" id="s-food-0">
+  <div class="kiosk-top food-top" style="background:#DA291C;">
+    <button class="back-btn" onclick="go('s-home')">←</button>
+    <span class="kiosk-header-title" style="font-size:20px;">🍔 롯데리아</span>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:20px;background:#fff;">
+    <div style="font-size:24px;font-weight:900;color:#1a1a1a;text-align:center;line-height:1.4;">주문 방법을<br>선택해 주세요</div>
+    <div style="display:flex;flex-direction:column;gap:14px;width:100%;">
+      <button onclick="state.foodEatType='매장';go('s-food-1')" style="background:#DA291C;border:none;border-radius:20px;padding:28px 20px;display:flex;align-items:center;gap:18px;cursor:pointer;width:100%;transition:transform .12s;" ontouchstart="">
+        <span style="font-size:52px;">🍽️</span>
+        <div style="text-align:left;">
+          <div style="font-size:22px;font-weight:900;color:#fff;">매장에서 먹기</div>
+          <div style="font-size:14px;color:rgba(255,255,255,.8);margin-top:4px;">트레이에 담아 드립니다</div>
+        </div>
+      </button>
+      <button onclick="state.foodEatType='포장';go('s-food-1')" style="background:#fff;border:3px solid #DA291C;border-radius:20px;padding:28px 20px;display:flex;align-items:center;gap:18px;cursor:pointer;width:100%;transition:transform .12s;" ontouchstart="">
+        <span style="font-size:52px;">🥡</span>
+        <div style="text-align:left;">
+          <div style="font-size:22px;font-weight:900;color:#DA291C;">포장해서 가져가기</div>
+          <div style="font-size:14px;color:#666;margin-top:4px;">가져가기 편한 봉투에 담아 드려요</div>
+        </div>
+      </button>
+    </div>
+    <div class="guide-chip" style="width:100%;"><span>💡</span>터치하시면 메뉴 선택 화면으로 이동합니다!</div>
+  </div>
+</div>
+
+<!-- FOOD 1: 카테고리 선택 -->
+<div class="screen" id="s-food-1">
+  <div class="kiosk-top food-top" style="background:#DA291C;">
+    <button class="back-btn" onclick="go('s-food-0')">←</button>
+    <span class="kiosk-header-title">🍔 롯데리아 — <span id="food-eat-type-label" style="font-size:14px;opacity:.9;">매장</span></span>
+  </div>
+  <div class="steps food-progress">
+    <div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div>
+    <span class="step-label">메뉴 선택 (1/4)</span>
+  </div>
+  <div class="menu-tabs" id="food-tabs" style="margin-top:12px;"></div>
+  <div class="kiosk-body" style="padding-top:4px;">
+    <div class="guide-chip"><span>👆</span>원하시는 메뉴를 눌러 장바구니에 담으세요!</div>
+    <div class="menu-grid" id="food-menu-list"></div>
+  </div>
+  <div class="kiosk-footer" id="food-cart-bar" style="display:none;">
+    <div class="cart-bar">
+      <div><div class="cart-count" id="food-cart-count"></div><div class="cart-total" id="food-cart-total"></div></div>
+      <button class="cart-btn" onclick="go('s-food-2')">장바구니 보기 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOOD 2: 장바구니 확인 -->
+<div class="screen" id="s-food-2">
+  <div class="kiosk-top food-top" style="background:#DA291C;">
+    <button class="back-btn" onclick="go('s-food-1')">←</button>
+    <span class="kiosk-header-title">🛒 장바구니 확인</span>
+  </div>
+  <div class="steps food-progress">
+    <div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div>
+    <span class="step-label">장바구니 (2/4)</span>
+  </div>
+  <div class="kiosk-body">
+    <div class="guide-chip"><span>✏️</span>수량을 바꾸거나 빼고 싶은 메뉴를 선택하세요</div>
+    <div class="cart-list" id="food-cart-list"></div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <button onclick="toast('쿠폰 번호를 입력하거나 바코드를 스캔하세요')" style="flex:1;background:#FFF3CD;border:2px solid #FFC107;border-radius:14px;padding:13px 8px;font-size:14px;font-weight:700;color:#856404;cursor:pointer;font-family:Roboto,sans-serif;">🎟️ 쿠폰·할인</button>
+      <button onclick="toast('엘포인트 카드를 스캔하거나 번호를 입력하세요')" style="flex:1;background:#E8F5E9;border:2px solid #4CAF50;border-radius:14px;padding:13px 8px;font-size:14px;font-weight:700;color:#2E7D32;cursor:pointer;font-family:Roboto,sans-serif;">🌟 L.포인트</button>
+    </div>
+    <div class="total-row"><span class="total-label">총 결제 금액</span><span class="total-price" id="food-total2">₩0</span></div>
+  </div>
+  <div class="kiosk-footer">
+    <button class="btn-primary" style="background:#DA291C!important;box-shadow:0 4px 14px rgba(218,41,28,.35)!important;" onclick="go('s-food-3')">결제 수단 선택 →</button>
+    <button class="btn-secondary" onclick="go('s-food-1')">← 메뉴 더 담기</button>
+  </div>
+</div>
+
+<!-- FOOD 3: 결제 수단 -->
+<div class="screen" id="s-food-3">
+  <div class="kiosk-top food-top" style="background:#DA291C;">
+    <button class="back-btn" onclick="go('s-food-2')">←</button>
+    <span class="kiosk-header-title">💳 결제 수단 선택</span>
+  </div>
+  <div class="steps food-progress">
+    <div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div>
+    <span class="step-label">결제 선택 (3/4)</span>
+  </div>
+  <div class="kiosk-body">
+    <div style="background:#f5f5f5;border-radius:14px;padding:12px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:14px;color:#666;">주문 방법</span>
+      <span style="font-size:15px;font-weight:700;color:#DA291C;" id="food-eat-type-disp">매장</span>
+    </div>
+    <div class="guide-chip"><span>💳</span>결제 방법을 선택해 주세요</div>
+    <div class="pay-methods">
+      <button class="pay-method selected" id="food-pay-1" onclick="selPay('food',1)">
+        <span class="pay-icon">💳</span>
+        <div><div class="pay-name">신용·체크카드</div><div class="pay-desc">카드를 기계에 꽂아주세요</div></div>
+        <span class="pay-check">✓</span>
+      </button>
+      <button class="pay-method" id="food-pay-2" onclick="selPay('food',2)">
+        <span class="pay-icon">📱</span>
+        <div><div class="pay-name">카카오페이·삼성페이</div><div class="pay-desc">QR코드 또는 NFC로 결제</div></div>
+        <span class="pay-check">✓</span>
+      </button>
+      <button class="pay-method" id="food-pay-3" onclick="selPay('food',3)">
+        <span class="pay-icon">💵</span>
+        <div><div class="pay-name">현금</div><div class="pay-desc">지폐를 투입구에 넣어주세요</div></div>
+        <span class="pay-check">✓</span>
+      </button>
+    </div>
+    <div class="total-row"><span class="total-label">결제 금액</span><span class="total-price" id="food-total3">₩0</span></div>
+  </div>
+  <div class="kiosk-footer">
+    <button class="btn-primary" style="background:#DA291C!important;box-shadow:0 4px 14px rgba(218,41,28,.35)!important;" onclick="go('s-food-4')">결제하기 ✓</button>
+  </div>
+</div>
+
+<!-- FOOD 4: 주문 완료 -->
+<div class="screen" id="s-food-4">
+  <div class="kiosk-top food-top" style="background:#DA291C;">
+    <span class="kiosk-header-title" style="margin-left:16px;">✅ 주문 완료</span>
+  </div>
+  <div class="steps food-progress">
+    <div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div>
+    <span class="step-label">주문 완료 (4/4)</span>
+  </div>
+  <div class="kiosk-body">
+    <div class="receipt">
+      <div class="receipt-icon">🎉</div>
+      <div class="receipt-title">주문이 접수됐어요!</div>
+      <div class="receipt-num" id="food-order-num">23</div>
+      <div class="receipt-sub">번호가 호출되면<br>카운터에서 받아가세요</div>
+      <hr class="receipt-divider"/>
+      <div id="food-receipt-items"></div>
+      <hr class="receipt-divider"/>
+      <div class="receipt-row total"><span>총 결제</span><span id="food-total4">₩0</span></div>
+    </div>
+    <div style="margin-top:16px;">
+      <div class="guide-chip"><span>🎊</span>연습을 완료했어요! 실제 방문 때도 잘 하실 수 있어요!</div>
+    </div>
+  </div>
+  <div class="kiosk-footer">
+    <button class="btn-primary" onclick="go('s-home')">🏠 처음으로 돌아가기</button>
+    <button class="btn-secondary" onclick="resetFood();go('s-food-0')">🔄 다시 연습하기</button>
+  </div>
+</div>
+
+<!-- ════════════════ HOSPITAL ════════════════ -->
+<!-- HOSP 1: 방문 목적 -->
+<div class="screen" id="s-hosp-1">
+  <div class="kiosk-top hosp-top">
+    <button class="back-btn" onclick="go('s-home')">←</button>
+    <span class="kiosk-header-title">🏥 병원 접수 키오스크</span>
+  </div>
+  <div class="steps"><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div><span class="step-label">방문 목적 (1/4)</span></div>
+  <div class="kiosk-body">
+    <div class="guide-chip"><span>👆</span>오늘 방문하신 목적을 선택해 주세요</div>
+    <div class="opt-list">
+      <button class="opt-item" onclick="selOpt(this,'hosp-purpose','접수')"><span class="opt-icon">📋</span><div class="opt-info"><div class="opt-name">진료 접수</div><div class="opt-sub">오늘 처음 방문 · 재진</div></div><span class="opt-check">✓</span></button>
+      <button class="opt-item" onclick="selOpt(this,'hosp-purpose','처방전')"><span class="opt-icon">💊</span><div class="opt-info"><div class="opt-name">처방전 발급</div><div class="opt-sub">이전 처방전 재발급</div></div><span class="opt-check">✓</span></button>
+      <button class="opt-item" onclick="selOpt(this,'hosp-purpose','수납')"><span class="opt-icon">💰</span><div class="opt-info"><div class="opt-name">진료비 수납</div><div class="opt-sub">진료 후 비용 결제</div></div><span class="opt-check">✓</span></button>
+      <button class="opt-item" onclick="selOpt(this,'hosp-purpose','증명서')"><span class="opt-icon">📄</span><div class="opt-info"><div class="opt-name">진단서·소견서 발급</div><div class="opt-sub">각종 의료 서류 발급</div></div><span class="opt-check">✓</span></button>
+    </div>
+  </div>
+  <div class="kiosk-footer"><button class="btn-primary" id="hosp-btn1" disabled onclick="go('s-hosp-2')">다음 →</button></div>
+</div>
+
+<!-- HOSP 2: 진료과 선택 -->
+<div class="screen" id="s-hosp-2">
+  <div class="kiosk-top hosp-top">
+    <button class="back-btn" onclick="go('s-hosp-1')">←</button>
+    <span class="kiosk-header-title">🏥 진료과 선택</span>
+  </div>
+  <div class="steps"><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div><span class="step-label">진료과 선택 (2/4)</span></div>
+  <div class="kiosk-body">
+    <div class="guide-chip"><span>🏥</span>진료 받으실 과를 선택해 주세요</div>
+    <div class="opt-list">
+      <button class="opt-item" onclick="selOpt(this,'hosp-dept','내과')"><span class="opt-icon">🫀</span><div class="opt-info"><div class="opt-name">내과</div><div class="opt-sub">소화·호흡·혈압·당뇨</div></div><span class="opt-check">✓</span></button>
+      <button class="opt-item" onclick="selOpt(this,'hosp-dept','정형외과')"><span class="opt-icon">🦴</span><div class="opt-info"><div class="opt-name">정형외과</div><div class="opt-sub">관절·척추·골절</div></div><span class="opt-check">✓</span></button>
+      <button class="opt-item" onclick="selOpt(this,'hosp-dept','피부과')"><span class="opt-icon">🩹</span><div class="opt-info"><div class="opt-name">피부과</div><div class="opt-sub">피부 트러블·두드러기</div></div><span class="opt-check">✓</span></button>
+      <button class="opt-item" onclick="selOpt(this,'hosp-dept','안과')"><span class="opt-icon">👁️</span><div class="opt-info"><div class="opt-name">안과</div><div class="opt-sub">눈 건강·시력·안압</div></div><span class="opt-check">✓</span></button>
+      <button class="opt-item" onclick="selOpt(this,'hosp-dept','이비인후과')"><span class="opt-icon">👂</span><div class="opt-info"><div class="opt-name">이비인후과</div><div class="opt-sub">귀·코·목</div></div><span class="opt-check">✓</span></button>
+    </div>
+  </div>
+  <div class="kiosk-footer"><button class="btn-primary" id="hosp-btn2" disabled onclick="go('s-hosp-3')">다음 →</button></div>
+</div>
+
+<!-- HOSP 3: 본인 확인 -->
+<div class="screen" id="s-hosp-3">
+  <div class="kiosk-top hosp-top">
+    <button class="back-btn" onclick="go('s-hosp-2')">←</button>
+    <span class="kiosk-header-title">🪪 본인 확인</span>
+  </div>
+  <div class="steps"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div><span class="step-label">본인 확인 (3/4)</span></div>
+  <div class="kiosk-body">
+    <div class="guide-chip"><span>🪪</span>아래 방법 중 하나로 본인을 확인해 주세요</div>
+    <div class="opt-list">
+      <button class="opt-item selected" onclick="selOpt(this,'hosp-id','진료카드')"><span class="opt-icon">💳</span><div class="opt-info"><div class="opt-name">병원 진료카드 사용</div><div class="opt-sub">카드를 투입구에 넣어주세요</div></div><span class="opt-check">✓</span></button>
+      <button class="opt-item" onclick="selOpt(this,'hosp-id','주민번호')"><span class="opt-icon">🔢</span><div class="opt-info"><div class="opt-name">주민등록번호 입력</div><div class="opt-sub">앞 6자리 + 뒷 7자리</div></div><span class="opt-check">✓</span></button>
+      <button class="opt-item" onclick="selOpt(this,'hosp-id','건강보험카드')"><span class="opt-icon">🏥</span><div class="opt-info"><div class="opt-name">건강보험증</div><div class="opt-sub">건강보험증을 스캔해 주세요</div></div><span class="opt-check">✓</span></button>
+    </div>
+  </div>
+  <div class="kiosk-footer"><button class="btn-primary" onclick="go('s-hosp-4')">접수 완료하기 ✓</button></div>
+</div>
+
+<!-- HOSP 4: 번호표 -->
+<div class="screen" id="s-hosp-4">
+  <div class="kiosk-top hosp-top">
+    <span class="kiosk-header-title" style="margin-left:16px;">✅ 접수 완료</span>
+  </div>
+  <div class="steps"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div><span class="step-label">접수 완료 (4/4)</span></div>
+  <div class="kiosk-body">
+    <div class="ticket">
+      <div class="ticket-label" id="hosp-dept-display">내과</div>
+      <div class="ticket-number">47</div>
+      <div class="ticket-sub">현재 대기 : 3명 (약 15분 예상)</div>
+    </div>
+    <div class="wait-info">
+      <span style="font-size:28px;">⏰</span>
+      <div><div style="font-size:16px;font-weight:700;color:var(--on-surface);">호명 시 진료실 앞으로 가세요</div><div style="font-size:13px;color:var(--on-surface-variant);margin-top:2px;">번호가 불릴 때까지 대기실에서 기다려주세요</div></div>
+    </div>
+    <div class="info-box">
+      <div class="info-row"><span class="info-key">담당 의사</span><span class="info-val">김민준 원장님</span></div>
+      <div class="info-row"><span class="info-key">진료실</span><span class="info-val highlight">3호실</span></div>
+      <div class="info-row"><span class="info-key">접수 시간</span><span class="info-val" id="hosp-time"></span></div>
+    </div>
+    <div class="guide-chip"><span>🎊</span>접수가 완료됐어요! 번호표를 꼭 챙기세요!</div>
+  </div>
+  <div class="kiosk-footer">
+    <button class="btn-primary" onclick="go('s-home')">🏠 처음으로 돌아가기</button>
+    <button class="btn-secondary" onclick="go('s-hosp-1')">🔄 다시 연습하기</button>
+  </div>
+</div>
+
+<!-- ════════════════ TRANSPORT ════════════════ -->
+<!-- TRANS 1: 출발역 -->
+<div class="screen" id="s-trans-1">
+  <div class="kiosk-top trans-top">
+    <button class="back-btn" onclick="go('s-home')">←</button>
+    <span class="kiosk-header-title">🚇 지하철 승차권</span>
+  </div>
+  <div class="steps"><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div><span class="step-label">출발역 선택 (1/4)</span></div>
+  <div class="kiosk-body">
+    <div class="guide-chip"><span>📍</span>출발하는 역을 선택해 주세요</div>
+    <div class="station-list" id="dep-list"></div>
+  </div>
+  <div class="kiosk-footer"><button class="btn-primary" id="trans-btn1" disabled onclick="go('s-trans-2')">다음 →</button></div>
+</div>
+
+<!-- TRANS 2: 도착역 -->
+<div class="screen" id="s-trans-2">
+  <div class="kiosk-top trans-top">
+    <button class="back-btn" onclick="go('s-trans-1')">←</button>
+    <span class="kiosk-header-title">🚇 도착역 선택</span>
+  </div>
+  <div class="steps"><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div><span class="step-label">도착역 선택 (2/4)</span></div>
+  <div class="kiosk-body">
+    <div class="guide-chip"><span>🏁</span>도착할 역을 선택해 주세요</div>
+    <div class="station-list" id="arr-list"></div>
+  </div>
+  <div class="kiosk-footer"><button class="btn-primary" id="trans-btn2" disabled onclick="go('s-trans-3')">다음 →</button></div>
+</div>
+
+<!-- TRANS 3: 인원·매수 -->
+<div class="screen" id="s-trans-3">
+  <div class="kiosk-top trans-top">
+    <button class="back-btn" onclick="go('s-trans-2')">←</button>
+    <span class="kiosk-header-title">👥 인원 선택</span>
+  </div>
+  <div class="steps"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div><span class="step-label">인원 선택 (3/4)</span></div>
+  <div class="kiosk-body">
+    <div class="guide-chip"><span>👥</span>몇 명이 타실 건지 선택해 주세요</div>
+    <div class="counter-row"><div><div class="counter-label">어른</div><div class="counter-sub">만 13세 이상 · 1,400원</div></div><div class="counter-ctrl"><button class="c-btn" onclick="changeCount('adult',-1)">−</button><span class="c-num" id="cnt-adult">1</span><button class="c-btn" onclick="changeCount('adult',1)">+</button></div></div>
+    <div class="counter-row"><div><div class="counter-label">청소년</div><div class="counter-sub">만 13~18세 · 720원</div></div><div class="counter-ctrl"><button class="c-btn" onclick="changeCount('youth',-1)">−</button><span class="c-num" id="cnt-youth">0</span><button class="c-btn" onclick="changeCount('youth',1)">+</button></div></div>
+    <div class="counter-row"><div><div class="counter-label">어린이</div><div class="counter-sub">만 6~12세 · 450원</div></div><div class="counter-ctrl"><button class="c-btn" onclick="changeCount('child',-1)">−</button><span class="c-num" id="cnt-child">0</span><button class="c-btn" onclick="changeCount('child',1)">+</button></div></div>
+    <div class="total-row" style="margin-top:16px;"><span class="total-label">합계 금액</span><span class="total-price" id="trans-total">₩1,400</span></div>
+  </div>
+  <div class="kiosk-footer"><button class="btn-primary" onclick="go('s-trans-4')">결제하기 →</button></div>
+</div>
+
+<!-- TRANS 4: 발권 완료 -->
+<div class="screen" id="s-trans-4">
+  <div class="kiosk-top trans-top">
+    <span class="kiosk-header-title" style="margin-left:16px;">✅ 발권 완료</span>
+  </div>
+  <div class="steps"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div><span class="step-label">발권 완료 (4/4)</span></div>
+  <div class="kiosk-body">
+    <div class="receipt">
+      <div class="receipt-icon">🎫</div>
+      <div class="receipt-title">승차권이 발권됐어요!</div>
+      <hr class="receipt-divider"/>
+      <div class="receipt-row"><span>출발역</span><span id="trans-dep-display" style="font-weight:700;"></span></div>
+      <div class="receipt-row"><span>도착역</span><span id="trans-arr-display" style="font-weight:700;"></span></div>
+      <div class="receipt-row"><span>승차 인원</span><span id="trans-pax-display" style="font-weight:700;"></span></div>
+      <hr class="receipt-divider"/>
+      <div class="receipt-row total"><span>총 결제</span><span id="trans-total2"></span></div>
+    </div>
+    <div style="margin-top:16px;">
+      <div class="guide-chip"><span>💡</span>승차권이 나오면 꼭 챙기세요! 개찰구에 넣으면 통과돼요</div>
+    </div>
+  </div>
+  <div class="kiosk-footer">
+    <button class="btn-primary" onclick="go('s-home')">🏠 처음으로 돌아가기</button>
+    <button class="btn-secondary" onclick="resetTrans();go('s-trans-1')">🔄 다시 연습하기</button>
+  </div>
+</div>
+
+<!-- ════════════════ ATM (KB국민은행) ════════════════ -->
+
+<!-- ATM 0: 메인 화면 - 거래 선택 (카드 삽입 전에 거래 종류 먼저 선택) -->
+<div class="screen" id="s-atm-0">
+  <div class="kb-standby" style="padding-bottom:0;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding-top:18px;">
+      <div>
+        <div style="font-size:20px;font-weight:900;color:#1A1F3B;">★ KB국민은행</div>
+        <div style="font-size:11px;color:#1A1F3B;opacity:.65;">Kookmin Bank ATM</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:17px;font-weight:700;color:#1A1F3B;" id="kb-clock-home"></div>
+        <div style="font-size:11px;color:#1A1F3B;opacity:.65;" id="kb-date-home"></div>
+      </div>
+    </div>
+    <div style="margin-top:10px;background:rgba(0,0,0,.12);border-radius:10px;padding:7px 14px;text-align:center;">
+      <div style="font-size:15px;font-weight:700;color:#1A1F3B;">원하시는 거래를 선택해 주세요</div>
+    </div>
+  </div>
+  <div style="padding:14px;flex:1;display:flex;flex-direction:column;gap:10px;overflow-y:auto;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <button class="kb-entry-btn" style="background:#FFB800;padding:22px 12px;" onclick="kbSelectTx('출금');go('s-atm-menu')">
+        <span style="font-size:38px;">💸</span>
+        <span style="font-size:20px;font-weight:900;color:#1A1F3B;">출금</span>
+        <span style="font-size:12px;color:#1A1F3B;opacity:.75;">내 돈 찾기</span>
+      </button>
+      <button class="kb-entry-btn" style="background:#fff;border:2.5px solid #FFB800;padding:22px 12px;" onclick="kbSelectTx('입금');go('s-atm-menu')">
+        <span style="font-size:38px;">💰</span>
+        <span style="font-size:20px;font-weight:900;color:#1A1F3B;">입금</span>
+        <span style="font-size:12px;color:#1A1F3B;opacity:.75;">내 통장에 넣기</span>
+      </button>
+      <button class="kb-entry-btn" style="background:#fff;border:2.5px solid #FFB800;padding:22px 12px;" onclick="kbSelectTx('이체');go('s-atm-menu')">
+        <span style="font-size:38px;">🔄</span>
+        <span style="font-size:20px;font-weight:900;color:#1A1F3B;">송금</span>
+        <span style="font-size:12px;color:#1A1F3B;opacity:.75;">다른 분께 보내기</span>
+      </button>
+      <button class="kb-entry-btn" style="background:#fff;border:2.5px solid #FFB800;padding:22px 12px;" onclick="kbSelectTx('잔액조회');go('s-atm-menu')">
+        <span style="font-size:38px;">📋</span>
+        <span style="font-size:20px;font-weight:900;color:#1A1F3B;">조회</span>
+        <span style="font-size:12px;color:#1A1F3B;opacity:.75;">잔액·거래내역</span>
+      </button>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button style="flex:1;background:#1A1F3B;border:none;border-radius:16px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:transform .12s;" onclick="go('s-atm-cl-bank')">
+        <span style="font-size:26px;">🏧</span>
+        <span style="font-size:14px;font-weight:700;color:#FFB800;">무통장입금</span>
+        <span style="font-size:10px;color:#FFB800;opacity:.8;">카드 없이 가능</span>
+      </button>
+      <button style="flex:1;background:#1A1F3B;border:none;border-radius:16px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:transform .12s;" onclick="go('s-atm-bill')">
+        <span style="font-size:26px;">🧾</span>
+        <span style="font-size:14px;font-weight:700;color:#FFB800;">공과금납부</span>
+        <span style="font-size:10px;color:#FFB800;opacity:.8;">카드 없이 가능</span>
+      </button>
+    </div>
+    <button class="btn-secondary" onclick="go('s-home')">← 처음으로 돌아가기</button>
+  </div>
+</div>
+
+<!-- ATM MENU: 전체 거래 메뉴 -->
+<div class="screen" id="s-atm-menu">
+  <div class="kb-top">
+    <button class="back-btn kb-back" onclick="go('s-atm-0')">←</button>
+    <div class="kb-top-logo">★ KB국민은행</div>
+    <div class="kb-top-time" id="kb-menu-time"></div>
+  </div>
+  <div style="padding:10px 12px 4px;flex:1;overflow-y:auto;">
+    <div style="background:#FFF0F0;border:2px solid #E53935;border-radius:14px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:flex-start;gap:10px;">
+      <span style="font-size:20px;flex-shrink:0;">🚨</span>
+      <div>
+        <div style="font-size:12px;font-weight:900;color:#E53935;">보이스피싱 피해 지급정지 신청</div>
+        <div style="font-size:11px;color:#7f0000;margin-top:2px;line-height:1.5;">경찰청 <b>112</b> / 금감원 <b>1644-9999</b><br>전화로 출금·송금 요청 시 즉시 신고!</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <button class="kb-menu-item kb-menu-highlight" onclick="kbSelectTx('출금');go('s-atm-skim')">
+        <span class="kb-menu-icon">💸</span><span class="kb-menu-name">예금출금</span>
+      </button>
+      <button class="kb-menu-item" onclick="toast('통장을 투입구에 넣어 주세요')">
+        <span class="kb-menu-icon">📒</span><span class="kb-menu-name">통장정리</span>
+      </button>
+      <button class="kb-menu-item" onclick="kbSelectTx('입금');go('s-atm-skim')">
+        <span class="kb-menu-icon">💰</span><span class="kb-menu-name">입금</span>
+      </button>
+      <button class="kb-menu-item" onclick="toast('신용카드는 해당 카드사 ATM 이용')">
+        <span class="kb-menu-icon">💳</span><span class="kb-menu-name">신용카드</span>
+      </button>
+      <button class="kb-menu-item" onclick="kbSelectTx('이체');go('s-atm-skim')">
+        <span class="kb-menu-icon">🔄</span><span class="kb-menu-name">계좌송금</span>
+      </button>
+      <button class="kb-menu-item" onclick="toast('CMS 서비스를 진행합니다')">
+        <span class="kb-menu-icon">📋</span><span class="kb-menu-name">CMS</span>
+      </button>
+      <button class="kb-menu-item" onclick="kbSelectTx('잔액조회');go('s-atm-skim')">
+        <span class="kb-menu-icon">🔍</span><span class="kb-menu-name">조회업무</span>
+      </button>
+      <button class="kb-menu-item" onclick="go('s-atm-bill')">
+        <span class="kb-menu-icon">🧾</span><span class="kb-menu-name">공과금</span>
+      </button>
+      <button class="kb-menu-item" onclick="toast('신고업무는 창구를 이용해 주세요')">
+        <span class="kb-menu-icon">🚨</span><span class="kb-menu-name">신고업무</span>
+      </button>
+      <button class="kb-menu-item" onclick="toast('전자통장 서비스를 진행합니다')">
+        <span class="kb-menu-icon">📱</span><span class="kb-menu-name">전자통장</span>
+      </button>
+      <button class="kb-menu-item" onclick="toast('현금카드 서비스를 진행합니다')">
+        <span class="kb-menu-icon">🏧</span><span class="kb-menu-name">현금카드</span>
+      </button>
+      <button class="kb-menu-item" onclick="toast('Global 외화 서비스를 진행합니다')">
+        <span class="kb-menu-icon">🌐</span><span class="kb-menu-name">Global</span>
+      </button>
+    </div>
+  </div>
+  <div style="padding:10px 14px;">
+    <button class="btn-secondary" onclick="go('s-atm-0')">← 처음으로</button>
+  </div>
+</div>
+
+<!-- ATM SKIM: 카드 복제 방지 안내 (2/6) -->
+<div class="screen" id="s-atm-skim">
+  <div class="kb-top">
+    <button class="back-btn kb-back" onclick="go('s-atm-menu')">←</button>
+    <div class="kb-top-logo">★ KB국민은행</div>
+    <div class="kb-top-tag" id="kb-skim-tag">출금</div>
+  </div>
+  <div class="kiosk-body" style="display:flex;flex-direction:column;gap:14px;">
+    <div style="background:#FFF8E7;border:2px solid #FFB800;border-radius:16px;padding:16px;">
+      <div style="font-size:15px;font-weight:900;color:#1A1F3B;margin-bottom:10px;">⚠️ 카드 복제 방지 안내</div>
+      <div style="font-size:14px;color:#333;line-height:1.8;">카드 투입구 주변에 <b style="color:#E53935;">이상한 장치</b>가 붙어 있거나 카드 삽입이 이상하면 <b>즉시 거래를 취소</b>하고 은행 직원에게 알려 주세요.</div>
+    </div>
+    <div style="background:#f5f5f5;border-radius:16px;padding:20px;text-align:center;">
+      <div style="font-size:56px;margin-bottom:8px;">🖥️</div>
+      <div style="font-size:13px;color:#555;line-height:1.6;">ATM 카드 투입구를<br>확인해 보세요</div>
+    </div>
+    <div class="guide-chip"><span>✅</span>이상이 없으면 아래 <b>거래 계속</b>을 눌러 주세요.</div>
+  </div>
+  <div class="kiosk-footer" style="display:flex;flex-direction:column;gap:10px;">
+    <button class="btn-primary kb-btn" onclick="renderKbSubtype();go('s-atm-subtype')">거래 계속 →</button>
+    <button class="btn-secondary" onclick="go('s-atm-0')">거래 취소</button>
+  </div>
+</div>
+
+<!-- ATM SUBTYPE: 거래 방법 선택 (3/6) -->
+<div class="screen" id="s-atm-subtype">
+  <div class="kb-top">
+    <button class="back-btn kb-back" onclick="go('s-atm-skim')">←</button>
+    <div class="kb-top-logo">★ KB국민은행</div>
+    <div class="kb-top-tag" id="kb-subtype-tag">출금</div>
+  </div>
+  <div class="kiosk-body">
+    <div class="guide-chip"><span>💡</span>어떤 방법으로 거래하시겠어요?</div>
+    <div class="opt-list" id="kb-subtype-list"></div>
+  </div>
+  <div class="kiosk-footer">
+    <button class="btn-secondary" onclick="go('s-atm-0')">거래 취소</button>
+  </div>
+</div>
+
+<!-- ATM NOCARD-ID: 무통장·무카드 출금 — 주민번호 입력 -->
+<div class="screen" id="s-atm-nocard-id">
+  <div class="kb-top">
+    <button class="back-btn kb-back" onclick="go('s-atm-subtype')">←</button>
+    <div class="kb-top-logo">★ KB국민은행</div>
+    <div class="kb-top-tag">무통장·무카드 출금</div>
+  </div>
+  <div class="steps"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div><span class="step-label">본인 확인 — 주민번호 (1/2)</span></div>
+  <div class="kiosk-body">
+    <div class="guide-chip"><span>🪪</span>카드 없이 주민등록번호로 본인을 확인합니다.</div>
+    <div class="kb-section-label">주민등록번호 앞 6자리</div>
+    <div class="kb-acc-input-wrap">
+      <div class="kb-acc-input-display" id="kb-nocard-id-front-disp" style="letter-spacing:6px;">______</div>
+    </div>
+    <div class="kb-section-label" style="margin-top:12px;">주민등록번호 뒤 7자리</div>
+    <div class="kb-acc-input-wrap">
+      <div class="kb-acc-input-display" id="kb-nocard-id-back-disp" style="letter-spacing:6px;">●●●●●●●</div>
+    </div>
+    <div style="margin-top:12px;background:#FFF8E7;border:1.5px solid #FFB800;border-radius:14px;padding:12px 16px;font-size:13px;color:#555;line-height:1.7;">
+      예시: <b>생년월일 앞 6자리</b>(670315) + <b>성별·지역 포함 뒷 7자리</b>(1234567)
+    </div>
+    <div class="kb-transfer-numpad" id="kb-nocard-id-numpad" style="margin-top:14px;"></div>
+  </div>
+  <div class="kiosk-footer" style="display:flex;flex-direction:column;gap:10px;">
+    <button class="btn-primary kb-btn" id="kb-nocard-id-next" disabled onclick="go('s-atm-nocard-acc')">다음 → 통장번호 입력</button>
+    <button class="btn-secondary" onclick="go('s-atm-0')">거래 취소</button>
+  </div>
+</div>
+
+<!-- ATM NOCARD-ACC: 무통장·무카드 출금 — 출금 통장번호 입력 -->
+<div class="screen" id="s-atm-nocard-acc">
+  <div class="kb-top">
+    <button class="back-btn kb-back" onclick="go('s-atm-nocard-id')">←</button>
+    <div class="kb-top-logo">★ KB국민은행</div>
+    <div class="kb-top-tag">무통장·무카드 출금</div>
+  </div>
+  <div class="steps"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div><span class="step-label">출금 통장번호 (2/2)</span></div>
+  <div class="kiosk-body">
+    <div class="guide-chip"><span>🏦</span>돈을 꺼낼 <b>본인 통장번호</b>를 입력해 주세요.</div>
+    <div class="kb-section-label">출금할 통장번호</div>
+    <div class="kb-acc-input-wrap">
+      <div class="kb-acc-input-display" id="kb-nocard-acc-disp">통장번호를 입력하세요</div>
+    </div>
+    <div style="background:#E3F2FD;border:1.5px solid #1565C0;border-radius:14px;padding:12px 16px;font-size:13px;color:#1a237e;line-height:1.7;margin-bottom:12px;">
+      📌 통장 앞면에 적힌 숫자를 그대로 입력하세요<br>예: <b>123456-78-901234</b> → 하이픈 빼고 숫자만 입력
+    </div>
+    <div class="kb-transfer-numpad" id="kb-nocard-acc-numpad"></div>
+  </div>
+  <div class="kiosk-footer" style="display:flex;flex-direction:column;gap:10px;">
+    <button class="btn-primary kb-btn" id="kb-nocard-acc-next" disabled onclick="kbNocardSetupAmt();go('s-atm-4a')">다음 → 금액 선택</button>
+    <button class="btn-secondary" onclick="go('s-atm-0')">거래 취소</button>
+  </div>
+</div>
+
+<!-- ATM CARD: 카드 삽입 화면 (4/6) -->
+<div class="screen" id="s-atm-card">
+  <div class="kb-standby">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding-top:18px;">
+      <div style="font-size:20px;font-weight:900;color:#1A1F3B;">★ KB국민은행</div>
+      <button onclick="go('s-atm-subtype')" style="width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.18);border:none;cursor:pointer;font-size:18px;color:#1A1F3B;font-weight:700;display:flex;align-items:center;justify-content:center;">←</button>
+    </div>
+    <div style="background:rgba(0,0,0,.12);border-radius:10px;padding:7px 14px;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px;">
+      <span style="font-size:13px;color:#1A1F3B;font-weight:600;opacity:.75;">선택 거래</span>
+      <span style="font-size:20px;font-weight:900;color:#1A1F3B;" id="kb-card-tx-label">출금</span>
+    </div>
+    <div class="kb-insert-area" style="margin-top:14px;">
+      <div class="kb-insert-arrow">⬆</div>
+      <div class="kb-insert-msg">카드를 넣어 주세요</div>
+      <div class="kb-insert-sub">카드 앞면이 위로 · 통장도 사용 가능합니다</div>
+    </div>
+    <div class="kb-clock-area" id="kb-card-clock"></div>
+  </div>
+  <div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px;">
+    <div class="guide-chip"><span>💳</span>실제로는 카드를 투입구에 넣으면 자동으로 읽힙니다!</div>
+    <button class="btn-primary kb-btn" onclick="go('s-atm-1')">💳 카드 투입하기</button>
+    <button class="btn-secondary" onclick="go('s-atm-subtype')">← 방법 다시 선택</button>
+  </div>
+</div>
+
+<!-- ATM 1: 비밀번호 입력 (보안 셔플 키패드) — 출금은 금액확인 후, 기타는 카드삽입 후 -->
+<div class="screen" id="s-atm-1">
+  <div class="kb-top">
+    <button class="back-btn kb-back" onclick="go(kbPinBackScreen)">←</button>
+    <div class="kb-top-logo">★ KB국민은행</div>
+    <div class="kb-top-time" id="kb-top-time"></div>
+  </div>
+  <div class="kiosk-body">
+    <div class="kb-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div><div class="kb-card-bank">★ KB국민은행</div><div class="kb-card-chip">▬▬▬</div></div>
+        <div style="font-size:12px;opacity:.75;text-align:right;">체크카드<br>CheckCard</div>
+      </div>
+      <div class="kb-card-num">1234 - **** - **** - 5678</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:8px;">
+        <div class="kb-card-name">김 순 자</div>
+        <div style="font-size:12px;opacity:.75;">12/28</div>
+      </div>
+    </div>
+    <div class="kb-pin-label">비밀번호 4자리를 눌러 주세요</div>
+    <div class="kb-pin-dots">
+      <div class="kb-pin-dot" id="kb-d1"></div>
+      <div class="kb-pin-dot" id="kb-d2"></div>
+      <div class="kb-pin-dot" id="kb-d3"></div>
+      <div class="kb-pin-dot" id="kb-d4"></div>
+    </div>
+    <div class="guide-chip"><span>🔒</span>손으로 가리고 비밀번호를 입력하세요! 숫자 위치가 매번 바뀝니다.</div>
+    <div class="kb-numpad" id="kb-numpad"></div>
+  </div>
+</div>
+
+<!-- ATM 3a: 출금 - 계좌 선택 -->
+<div class="screen" id="s-atm-3a">
+  <div class="kb-top">
+    <button class="back-btn kb-back" onclick="go('s-atm-1')">←</button>
+    <div class="kb-top-logo">★ KB국민은행</div>
+    <div class="kb-top-tag">출금</div>
+  </div>
+  <div class="steps"><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div><span class="step-label">계좌 선택 (1/3)</span></div>
+  <div class="kiosk-body">
+    <div class="kb-section-title">출금할 계좌를 선택해 주세요</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button class="kb-account-btn" id="kb-acc-1" onclick="selKbAcc(1)">
+        <div class="kb-acc-left"><div class="kb-acc-type">KB 주거래통장</div><div class="kb-acc-num">123 - 45 - 678901</div></div>
+        <div class="kb-acc-right"><div class="kb-acc-bal">1,245,800원</div><div class="kb-acc-check">✓</div></div>
+      </button>
+      <button class="kb-account-btn" id="kb-acc-2" onclick="selKbAcc(2)">
+        <div class="kb-acc-left"><div class="kb-acc-type">KB 저축예금</div><div class="kb-acc-num">234 - 56 - 789012</div></div>
+        <div class="kb-acc-right"><div class="kb-acc-bal">8,560,000원</div><div class="kb-acc-check">✓</div></div>
+      </button>
+    </div>
+  </div>
+  <div class="kiosk-footer">
+    <button class="btn-primary kb-btn" id="kb-acc-next" disabled onclick="go('s-atm-4a')">다음 →</button>
+    <button class="btn-secondary" onclick="go('s-atm-0')">거래 취소</button>
+  </div>
+</div>
+
+<!-- ATM 4a: 출금 - 금액 선택 -->
+<div class="screen" id="s-atm-4a">
+  <div class="kb-top">
+    <button class="back-btn kb-back" onclick="go(kbNocardAccInput?'s-atm-nocard-acc':'s-atm-3a')">←</button>
+    <div class="kb-top-logo">★ KB국민은행</div>
+    <div class="kb-top-tag">출금</div>
+  </div>
+  <div class="steps"><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div><span class="step-label">금액 선택 (2/3)</span></div>
+  <div class="kiosk-body">
+    <div class="kb-section-title">출금할 금액을 선택해 주세요</div>
+    <div class="kb-note-row">
+      <div class="kb-note-label">지폐 종류</div>
+      <div style="display:flex;gap:8px;">
+        <button class="kb-note-btn selected" id="kb-note-1" onclick="selNote(1)">만원권</button>
+        <button class="kb-note-btn" id="kb-note-2" onclick="selNote(2)">오만원권</button>
+        <button class="kb-note-btn" id="kb-note-3" onclick="selNote(3)">혼 합</button>
+      </div>
+    </div>
+    <div class="kb-amount-grid">
+      <button class="kb-amount-btn" onclick="selKbAmt(this,10000)">1만원</button>
+      <button class="kb-amount-btn" onclick="selKbAmt(this,30000)">3만원</button>
+      <button class="kb-amount-btn" onclick="selKbAmt(this,50000)">5만원</button>
+      <button class="kb-amount-btn" onclick="selKbAmt(this,100000)">10만원</button>
+      <button class="kb-amount-btn" onclick="selKbAmt(this,200000)">20만원</button>
+      <button class="kb-amount-btn" onclick="selKbAmt(this,300000)">30만원</button>
+      <button class="kb-amount-btn" onclick="selKbAmt(this,400000)">40만원</button>
+      <button class="kb-amount-btn" onclick="selKbAmt(this,500000)">50만원</button>
+      <button class="kb-amount-btn" onclick="selKbAmt(this,700000)">70만원</button>
+      <button class="kb-amount-btn" onclick="selKbAmt(this,1000000)">100만원</button>
+      <button class="kb-amount-btn kb-direct-btn" onclick="selKbAmt(this,70000);toast('직접 입력: 7만원으로 설정됩니다')">직접입력</button>
+    </div>
+    <div class="kb-amt-display"><span class="kb-amt-label">출금 금액</span><span class="kb-amt-val" id="kb-amt-val">금액을 선택하세요</span></div>
+  </div>
+  <div class="kiosk-footer">
+    <button class="btn-primary kb-btn" id="kb-amt-next" disabled onclick="go('s-atm-phishing')">다음 →</button>
+    <button class="btn-secondary" onclick="go('s-atm-0')">거래 취소</button>
+  </div>
+</div>
+
+<!-- ATM PHISHING: 보이스피싱 확인 (5/6) -->
+<div class="screen" id="s-atm-phishing">
+  <div class="kb-top">
+    <button class="back-btn kb-back" onclick="go('s-atm-4a')">←</button>
+    <div class="kb-top-logo">★ KB국민은행</div>
+    <div class="kb-top-tag">피해예방 확인</div>
+  </div>
+  <div class="kiosk-body" style="display:flex;flex-direction:column;align-items:center;gap:16px;padding-top:20px;">
+    <span style="font-size:56px;">🚨</span>
+    <div style="background:#FFF0F0;border:2.5px solid #E53935;border-radius:18px;padding:20px;width:100%;text-align:center;">
+      <div style="font-size:15px;font-weight:900;color:#E53935;line-height:1.7;">혹시, 검찰·경찰·금융감독원<br>또는 모르는 사람이 전화로<br><span style="font-size:18px;">출금 또는 송금을 요청</span>하였나요?</div>
+    </div>
+    <div class="guide-chip" style="width:100%;"><span>💡</span>국가기관은 절대 전화로 출금·이체를 요청하지 않습니다!</div>
+    <div style="display:flex;flex-direction:column;gap:10px;width:100%;">
+      <button onclick="toast('거래가 중단됩니다. 가까운 경찰서나 은행에 신고해 주세요');go('s-atm-0')" style="background:#E53935;color:#fff;border:none;border-radius:50px;padding:18px;font-size:17px;font-weight:700;cursor:pointer;font-family:Roboto,sans-serif;">예 → 거래 진행 불가</button>
+      <button class="btn-primary kb-btn" onclick="go('s-atm-5a')">아니오 → 정상 거래 계속</button>
+    </div>
+  </div>
+</div>
+
+<!-- ATM 5a: 거래 확인 (출금) -->
+<div class="screen" id="s-atm-5a">
+  <div class="kb-top">
+    <button class="back-btn kb-back" onclick="go('s-atm-4a')">←</button>
+    <div class="kb-top-logo">★ KB국민은행</div>
+    <div class="kb-top-tag">출금 확인</div>
+  </div>
+  <div class="steps"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div><span class="step-label">거래 확인 (3/3)</span></div>
+  <div class="kiosk-body">
+    <div class="kb-confirm-box">
+      <div class="kb-confirm-title">다음 내용으로 거래하시겠습니까?</div>
+      <div class="kb-confirm-type">💸 출 금</div>
+      <div>
+        <div class="kb-confirm-row"><span>계 좌</span><span id="kb-confirm-acc">123-45-678901</span></div>
+        <div class="kb-confirm-row"><span>합 계</span><span class="kb-confirm-highlight" id="kb-confirm-amt">-</span></div>
+        <div class="kb-confirm-row"><span>오만원권</span><span id="kb-confirm-50k">-</span></div>
+        <div class="kb-confirm-row"><span>만원권</span><span id="kb-confirm-10k">-</span></div>
+        <div class="kb-confirm-row"><span>거래 후 잔액</span><span id="kb-confirm-remain">-</span></div>
+      </div>
+    </div>
+    <div style="background:var(--surface-variant);border-radius:14px;padding:12px 16px;margin-bottom:12px;">
+      <div style="font-size:13px;color:var(--on-surface-variant);margin-bottom:6px;">출금통장 메모 (선택)</div>
+      <input id="kb-confirm-memo" type="text" placeholder="예: 생활비" style="width:100%;border:none;background:transparent;font-size:15px;font-family:Roboto,sans-serif;outline:none;color:var(--on-surface);" maxlength="10"/>
+    </div>
+    <div class="guide-chip"><span>⚠️</span>확인 후 <b>비밀번호</b>를 입력합니다!</div>
+  </div>
+  <div class="kiosk-footer">
+    <button class="btn-primary kb-btn" onclick="kbPinBackScreen='s-atm-5a';go('s-atm-1')">🔒 확인 → 비밀번호 입력</button>
+    <button class="btn-secondary" onclick="go('s-atm-0')">✕ 거래 취소</button>
+  </div>
+</div>
+
+<!-- ATM 3b: 이체 - 계좌 입력 -->
+<div class="screen" id="s-atm-3b">
+  <div class="kb-top">
+    <button class="back-btn kb-back" onclick="go('s-atm-1')">←</button>
+    <div class="kb-top-logo">★ KB국민은행</div>
+    <div class="kb-top-tag">이체</div>
+  </div>
+  <div class="steps"><div class="step-dot active"></div><div class="step-dot"></div><span class="step-label">받는 분 계좌 (1/2)</span></div>
+  <div class="kiosk-body">
+    <div class="kb-section-label">받는 은행 선택</div>
+    <div class="kb-bank-grid">
+      <button class="kb-bank-btn selected" id="kb-bank-kb" onclick="selKbBank(this,'KB국민은행')">KB국민</button>
+      <button class="kb-bank-btn" onclick="selKbBank(this,'신한은행')">신 한</button>
+      <button class="kb-bank-btn" onclick="selKbBank(this,'우리은행')">우 리</button>
+      <button class="kb-bank-btn" onclick="selKbBank(this,'하나은행')">하 나</button>
+      <button class="kb-bank-btn" onclick="selKbBank(this,'농 협')">농 협</button>
+      <button class="kb-bank-btn" onclick="selKbBank(this,'기업은행')">기 업</button>
+    </div>
+    <div class="kb-section-label" style="margin-top:14px;">받는 분 계좌번호 입력</div>
+    <div class="kb-acc-input-wrap"><div class="kb-acc-input-display" id="kb-trans-acc-display">계좌번호를 입력하세요</div></div>
+    <div class="kb-transfer-numpad" id="kb-transfer-numpad"></div>
+  </div>
+  <div class="kiosk-footer">
+    <button class="btn-primary kb-btn" id="kb-trans-next" disabled onclick="go('s-atm-3b-2')">다음 →</button>
+    <button class="btn-secondary" onclick="go('s-atm-0')">취소</button>
+  </div>
+</div>
+
+<!-- ATM 3b-2: 이체 - 금액 -->
+<div class="screen" id="s-atm-3b-2">
+  <div class="kb-top">
+    <button class="back-btn kb-back" onclick="go('s-atm-3b')">←</button>
+    <div class="kb-top-logo">★ KB국민은행</div>
+    <div class="kb-top-tag">이체</div>
+  </div>
+  <div class="steps"><div class="step-dot done"></div><div class="step-dot active"></div><span class="step-label">이체 금액 (2/2)</span></div>
+  <div class="kiosk-body">
+    <div class="kb-confirm-box" style="margin-bottom:14px;">
+      <div class="kb-confirm-row"><span>받는 은행</span><span id="kb-trans-bank-disp" style="font-weight:700;">KB국민은행</span></div>
+      <div class="kb-confirm-row"><span>받는 계좌</span><span id="kb-trans-acc-disp" style="font-weight:700;color:#E65C00;">-</span></div>
+    </div>
+    <div class="kb-section-title">이체할 금액을 선택해 주세요</div>
+    <div class="kb-amount-grid">
+      <button class="kb-amount-btn" onclick="selKbTransAmt(this,10000)">1만원</button>
+      <button class="kb-amount-btn" onclick="selKbTransAmt(this,30000)">3만원</button>
+      <button class="kb-amount-btn" onclick="selKbTransAmt(this,50000)">5만원</button>
+      <button class="kb-amount-btn" onclick="selKbTransAmt(this,100000)">10만원</button>
+      <button class="kb-amount-btn" onclick="selKbTransAmt(this,200000)">20만원</button>
+      <button class="kb-amount-btn" onclick="selKbTransAmt(this,500000)">50만원</button>
+    </div>
+    <div class="kb-amt-display"><span class="kb-amt-label">이체 금액</span><span class="kb-amt-val" id="kb-trans-amt-val">금액을 선택하세요</span></div>
+  </div>
+  <div class="kiosk-footer">
+    <button class="btn-primary kb-btn" id="kb-trans-confirm" disabled onclick="go('s-atm-done-trans')">이체 확인 →</button>
+    <button class="btn-secondary" onclick="go('s-atm-0')">취소</button>
+  </div>
+</div>
+
+<!-- ATM 3c: 입금 -->
+<div class="screen" id="s-atm-3c">
+  <div class="kb-top">
+    <button class="back-btn kb-back" onclick="go('s-atm-1')">←</button>
+    <div class="kb-top-logo">★ KB국민은행</div>
+    <div class="kb-top-tag">입금</div>
+  </div>
+  <div class="kiosk-body">
+    <div class="kb-section-title">현금을 투입해 주세요</div>
+    <div class="kb-cash-area">
+      <div style="font-size:52px;">💵</div>
+      <div style="font-size:18px;font-weight:700;color:#1A1F3B;margin-top:12px;">현금 투입구에 지폐를 넣어주세요</div>
+      <div style="font-size:13px;color:var(--on-surface-variant);margin-top:6px;line-height:1.6;">앞면이 위로 · 최대 100장<br>만원권 · 오만원권 사용 가능</div>
+    </div>
+    <div class="info-box">
+      <div class="info-row"><span class="info-key">입금 계좌</span><span class="info-val kb-highlight">123 - 45 - 678901</span></div>
+      <div class="info-row"><span class="info-key">현재 잔액</span><span class="info-val">1,245,800원</span></div>
+    </div>
+  </div>
+  <div class="kiosk-footer">
+    <button class="btn-primary kb-btn" onclick="go('s-atm-done-dep')">입금 확인 ✓</button>
+    <button class="btn-secondary" onclick="go('s-atm-0')">취소</button>
+  </div>
+</div>
+
+<!-- ATM 3d: 잔액 조회 -->
+<div class="screen" id="s-atm-3d">
+  <div class="kb-top">
+    <button class="back-btn kb-back" onclick="go('s-atm-1')">←</button>
+    <div class="kb-top-logo">★ KB국민은행</div>
+    <div class="kb-top-tag">잔액조회</div>
+  </div>
+  <div class="kiosk-body">
+    <div class="kb-section-title">계좌 잔액</div>
+    <div class="kb-balance-card">
+      <div class="kb-balance-bank">★ KB 주거래통장</div>
+      <div class="kb-balance-num">123 - 45 - 678901</div>
+      <div class="kb-balance-amount">1,245,800<span>원</span></div>
+    </div>
+    <div class="kb-balance-card">
+      <div class="kb-balance-bank">★ KB 저축예금</div>
+      <div class="kb-balance-num">234 - 56 - 789012</div>
+      <div class="kb-balance-amount">8,560,000<span>원</span></div>
+    </div>
+    <div class="info-box" style="margin-top:12px;">
+      <div class="info-row"><span class="info-key">최근 입금</span><span class="info-val" style="color:#2E7D32;font-weight:700;">+300,000원 (어제)</span></div>
+      <div class="info-row"><span class="info-key">최근 출금</span><span class="info-val" style="color:#B3261E;font-weight:700;">-50,000원 (2일전)</span></div>
+    </div>
+    <div class="kb-receipt-q">명세표를 출력하시겠습니까?</div>
+    <div style="display:flex;gap:10px;">
+      <button class="kb-yn-btn" onclick="toast('명세표를 출력합니다')">예</button>
+      <button class="kb-yn-btn kb-yn-no" onclick="toast('출력을 취소했습니다')">아니오</button>
+    </div>
+  </div>
+  <div class="kiosk-footer">
+    <button class="btn-primary kb-btn" onclick="go('s-home')">🏠 거래 종료</button>
+    <button class="btn-secondary" onclick="go('s-atm-0')">← 다른 거래</button>
+  </div>
+</div>
+
+<!-- ATM CASH-OUT: 현금·카드 받기 (6/6) -->
+<div class="screen" id="s-atm-cash-out">
+  <div class="kb-top" style="background:#1A1F3B;">
+    <div class="kb-top-logo" style="color:#FFB800;">★ KB국민은행</div>
+    <div style="font-size:12px;color:#FFB800;opacity:.8;">출금 · 내 돈 찾기 6/6</div>
+  </div>
+  <div class="kiosk-body" style="display:flex;flex-direction:column;align-items:center;gap:18px;padding-top:28px;">
+    <div style="font-size:20px;font-weight:900;color:#1A1F3B;text-align:center;">현금을 받아 주세요</div>
+    <div style="background:#FFF8E7;border:2px dashed #FFB800;border-radius:20px;padding:28px 20px;width:100%;text-align:center;">
+      <div style="font-size:64px;animation:bounce 1s infinite;">💵</div>
+      <div style="font-size:15px;font-weight:700;color:#1A1F3B;margin-top:12px;">현금과 카드를 투입구에서 꺼내 주세요</div>
+      <div style="font-size:12px;color:#666;margin-top:6px;line-height:1.6;">카드 · 명세표 슬롯도 확인해 주세요</div>
+    </div>
+    <div class="guide-chip" style="width:100%;"><span>⚠️</span>현금과 카드를 <b>반드시 챙기세요!</b> 잊으면 회수됩니다.</div>
+    <button class="btn-primary kb-btn" style="width:100%;" onclick="renderKbDone();go('s-atm-done')">✅ 현금·카드 챙겼습니다</button>
+  </div>
+</div>
+
+<!-- ATM DONE: 출금 완료 -->
+<div class="screen" id="s-atm-done">
+  <div class="kb-top" style="background:#1A1F3B;">
+    <div class="kb-top-logo" style="color:#FFB800;">★ KB국민은행</div>
+  </div>
+  <div class="kiosk-body">
+    <div class="kb-done-area">
+      <div class="kb-done-check">✓</div>
+      <div class="kb-done-title">출금이 완료되었습니다</div>
+      <div class="kb-done-sub">현금과 카드를 꼭 챙기세요!</div>
+    </div>
+    <div class="kb-confirm-box">
+      <div class="kb-confirm-row"><span>출금 금액</span><span class="kb-confirm-highlight" id="kb-done-amt">-</span></div>
+      <div class="kb-confirm-row"><span>거래 후 잔액</span><span id="kb-done-remain">-</span></div>
+      <div class="kb-confirm-row"><span>거래 일시</span><span id="kb-done-time" style="font-size:13px;">-</span></div>
+    </div>
+    <div class="kb-receipt-q">영수증을 출력하시겠습니까?</div>
+    <div style="display:flex;gap:10px;margin-bottom:14px;">
+      <button class="kb-yn-btn" onclick="toast('영수증을 출력합니다')">예</button>
+      <button class="kb-yn-btn kb-yn-no" onclick="toast('출력 안함')">아니오</button>
+    </div>
+    <div class="guide-chip"><span>⚠️</span>카드를 꺼내는 것을 잊지 마세요!</div>
+  </div>
+  <div class="kiosk-footer">
+    <button class="btn-primary kb-btn" onclick="go('s-home')">🏠 거래 종료</button>
+    <button class="btn-secondary" onclick="resetKbAtm();go('s-atm-0')">🔄 다시 연습하기</button>
+  </div>
+</div>
+
+<!-- ATM DONE: 이체 완료 -->
+<div class="screen" id="s-atm-done-trans">
+  <div class="kb-top" style="background:#1A1F3B;">
+    <div class="kb-top-logo" style="color:#FFB800;">★ KB국민은행</div>
+  </div>
+  <div class="kiosk-body">
+    <div class="kb-done-area">
+      <div class="kb-done-check">✓</div>
+      <div class="kb-done-title">이체가 완료되었습니다</div>
+      <div class="kb-done-sub">거래 내역을 확인하세요</div>
+    </div>
+    <div class="kb-confirm-box">
+      <div class="kb-confirm-row"><span>받는 은행</span><span id="kb-trans-done-bank" style="font-weight:700;">KB국민은행</span></div>
+      <div class="kb-confirm-row"><span>받는 계좌</span><span id="kb-trans-done-acc" style="font-weight:700;">-</span></div>
+      <div class="kb-confirm-row"><span>이체 금액</span><span class="kb-confirm-highlight" id="kb-trans-done-amt">-</span></div>
+    </div>
+    <div class="kb-receipt-q">영수증을 출력하시겠습니까?</div>
+    <div style="display:flex;gap:10px;margin-bottom:14px;">
+      <button class="kb-yn-btn" onclick="toast('영수증을 출력합니다')">예</button>
+      <button class="kb-yn-btn kb-yn-no" onclick="toast('출력 안함')">아니오</button>
+    </div>
+  </div>
+  <div class="kiosk-footer">
+    <button class="btn-primary kb-btn" onclick="go('s-home')">🏠 거래 종료</button>
+    <button class="btn-secondary" onclick="resetKbAtm();go('s-atm-0')">🔄 다시 연습하기</button>
+  </div>
+</div>
+
+<!-- ATM DONE: 입금 완료 -->
+<div class="screen" id="s-atm-done-dep">
+  <div class="kb-top" style="background:#1A1F3B;">
+    <div class="kb-top-logo" style="color:#FFB800;">★ KB국민은행</div>
+  </div>
+  <div class="kiosk-body">
+    <div class="kb-done-area">
+      <div class="kb-done-check">✓</div>
+      <div class="kb-done-title">입금이 완료되었습니다</div>
+      <div class="kb-done-sub">현금과 카드를 꼭 챙기세요!</div>
+    </div>
+    <div class="kb-confirm-box">
+      <div class="kb-confirm-row"><span>입금 계좌</span><span style="font-weight:700;">123-45-678901</span></div>
+      <div class="kb-confirm-row"><span>거래 후 잔액</span><span class="kb-confirm-highlight">1,545,800원</span></div>
+    </div>
+    <div class="kb-receipt-q">영수증을 출력하시겠습니까?</div>
+    <div style="display:flex;gap:10px;margin-bottom:14px;">
+      <button class="kb-yn-btn" onclick="toast('영수증을 출력합니다')">예</button>
+      <button class="kb-yn-btn kb-yn-no" onclick="toast('출력 안함')">아니오</button>
+    </div>
+  </div>
+  <div class="kiosk-footer">
+    <button class="btn-primary kb-btn" onclick="go('s-home')">🏠 거래 종료</button>
+    <button class="btn-secondary" onclick="resetKbAtm();go('s-atm-0')">🔄 다시 연습하기</button>
+  </div>
+</div>
+
+<!-- ATM CL-BANK: 무통장입금 - 받는 은행 선택 -->
+<div class="screen" id="s-atm-cl-bank">
+  <div class="kb-top" style="background:#1A1F3B;">
+    <button class="back-btn" style="background:rgba(255,255,255,.15);color:#FFB800;" onclick="go('s-atm-0')">←</button>
+    <div class="kb-top-logo" style="color:#FFB800;">★ KB국민은행</div>
+    <div class="kb-top-tag" style="background:#FFB800;color:#1A1F3B;">무통장입금</div>
+  </div>
+  <div class="steps"><div class="step-dot active" style="background:#FFB800;"></div><div class="step-dot"></div><div class="step-dot"></div><span class="step-label">은행 선택 (1/3)</span></div>
+  <div class="kiosk-body">
+    <div class="guide-chip" style="background:#FFF8E7;"><span>🏧</span><strong>무통장입금</strong>: 카드 없이 다른 분 계좌에 현금을 입금하는 서비스입니다.</div>
+    <div class="kb-section-label">받는 분의 은행을 선택하세요</div>
+    <div class="kb-bank-grid" style="grid-template-columns:repeat(3,1fr);">
+      <button class="kb-bank-btn selected" id="kb-cl-b-kb" onclick="selKbClBank(this,'KB국민은행')">KB국민</button>
+      <button class="kb-bank-btn" onclick="selKbClBank(this,'신한은행')">신 한</button>
+      <button class="kb-bank-btn" onclick="selKbClBank(this,'우리은행')">우 리</button>
+      <button class="kb-bank-btn" onclick="selKbClBank(this,'하나은행')">하 나</button>
+      <button class="kb-bank-btn" onclick="selKbClBank(this,'NH농협')">NH농협</button>
+      <button class="kb-bank-btn" onclick="selKbClBank(this,'IBK기업')">IBK기업</button>
+      <button class="kb-bank-btn" onclick="selKbClBank(this,'카카오뱅크')">카카오</button>
+      <button class="kb-bank-btn" onclick="selKbClBank(this,'토스뱅크')">토 스</button>
+      <button class="kb-bank-btn" onclick="selKbClBank(this,'SC제일은행')">SC제일</button>
+    </div>
+  </div>
+  <div class="kiosk-footer">
+    <button class="btn-primary kb-btn" onclick="go('s-atm-cl-acc')">다음 →</button>
+    <button class="btn-secondary" onclick="go('s-atm-0')">취소</button>
+  </div>
+</div>
+
+<!-- ATM CL-ACC: 무통장입금 - 계좌번호 입력 -->
+<div class="screen" id="s-atm-cl-acc">
+  <div class="kb-top" style="background:#1A1F3B;">
+    <button class="back-btn" style="background:rgba(255,255,255,.15);color:#FFB800;" onclick="go('s-atm-cl-bank')">←</button>
+    <div class="kb-top-logo" style="color:#FFB800;">★ KB국민은행</div>
+    <div class="kb-top-tag" style="background:#FFB800;color:#1A1F3B;">무통장입금</div>
+  </div>
+  <div class="steps"><div class="step-dot done" style="background:#FFB800;"></div><div class="step-dot active" style="background:#FFB800;"></div><div class="step-dot"></div><span class="step-label">계좌번호 입력 (2/3)</span></div>
+  <div class="kiosk-body">
+    <div class="kb-confirm-box" style="margin-bottom:12px;padding:12px 16px;">
+      <div class="kb-confirm-row"><span>받는 은행</span><span id="kb-cl-bank-disp" style="font-weight:700;color:#E65C00;">KB국민은행</span></div>
+    </div>
+    <div class="kb-section-label">받는 분 계좌번호를 입력해 주세요</div>
+    <div class="kb-acc-input-wrap"><div class="kb-acc-input-display" id="kb-cl-acc-display">계좌번호를 입력하세요</div></div>
+    <div class="kb-transfer-numpad" id="kb-cl-numpad"></div>
+    <div class="kb-section-label" style="margin-top:12px;">입금자명</div>
+    <div style="background:var(--surface-variant);border-radius:12px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:16px;font-weight:700;color:var(--on-surface);">김 순 자</span>
+      <span style="font-size:12px;color:var(--on-surface-variant);">수정은 창구 이용</span>
+    </div>
+  </div>
+  <div class="kiosk-footer">
+    <button class="btn-primary kb-btn" id="kb-cl-acc-next" disabled onclick="go('s-atm-cl-cash')">다음 →</button>
+    <button class="btn-secondary" onclick="go('s-atm-0')">취소</button>
+  </div>
+</div>
+
+<!-- ATM CL-CASH: 무통장입금 - 현금 투입 -->
+<div class="screen" id="s-atm-cl-cash">
+  <div class="kb-top" style="background:#1A1F3B;">
+    <button class="back-btn" style="background:rgba(255,255,255,.15);color:#FFB800;" onclick="go('s-atm-cl-acc')">←</button>
+    <div class="kb-top-logo" style="color:#FFB800;">★ KB국민은행</div>
+    <div class="kb-top-tag" style="background:#FFB800;color:#1A1F3B;">무통장입금</div>
+  </div>
+  <div class="steps"><div class="step-dot done" style="background:#FFB800;"></div><div class="step-dot done" style="background:#FFB800;"></div><div class="step-dot active" style="background:#FFB800;"></div><span class="step-label">현금 투입 (3/3)</span></div>
+  <div class="kiosk-body">
+    <div class="kb-confirm-box" style="margin-bottom:12px;padding:12px 16px;">
+      <div class="kb-confirm-row"><span>받는 은행</span><span id="kb-cl-bank-disp2" style="font-weight:700;">KB국민은행</span></div>
+      <div class="kb-confirm-row"><span>받는 계좌</span><span id="kb-cl-acc-disp2" style="font-weight:700;color:#E65C00;">-</span></div>
+      <div class="kb-confirm-row"><span>입금자명</span><span style="font-weight:700;">김 순 자</span></div>
+    </div>
+    <div class="kb-cash-area" style="padding:20px;">
+      <div style="font-size:48px;animation:bounce 1.2s infinite;">💵</div>
+      <div style="font-size:16px;font-weight:700;color:#1A1F3B;margin-top:10px;">현금을 투입구에 넣어주세요</div>
+      <div style="font-size:12px;color:var(--on-surface-variant);margin-top:4px;line-height:1.5;">앞면이 위로 · 만원권·오만원권 가능</div>
+    </div>
+    <div class="kb-section-label">입금 금액 선택</div>
+    <div class="kb-amount-grid">
+      <button class="kb-amount-btn" onclick="selKbClAmt(this,10000)">1만원</button>
+      <button class="kb-amount-btn" onclick="selKbClAmt(this,30000)">3만원</button>
+      <button class="kb-amount-btn" onclick="selKbClAmt(this,50000)">5만원</button>
+      <button class="kb-amount-btn" onclick="selKbClAmt(this,100000)">10만원</button>
+      <button class="kb-amount-btn" onclick="selKbClAmt(this,200000)">20만원</button>
+      <button class="kb-amount-btn" onclick="selKbClAmt(this,300000)">30만원</button>
+    </div>
+    <div class="kb-amt-display"><span class="kb-amt-label">투입 금액</span><span class="kb-amt-val" id="kb-cl-amt-val">금액을 선택하세요</span></div>
+  </div>
+  <div class="kiosk-footer">
+    <button class="btn-primary kb-btn" id="kb-cl-cash-next" disabled onclick="renderKbClDone();go('s-atm-cl-done')">입금 확인 ✓</button>
+    <button class="btn-secondary" onclick="go('s-atm-0')">취소</button>
+  </div>
+</div>
+
+<!-- ATM CL-DONE: 무통장입금 완료 -->
+<div class="screen" id="s-atm-cl-done">
+  <div class="kb-top" style="background:#1A1F3B;">
+    <div class="kb-top-logo" style="color:#FFB800;">★ KB국민은행</div>
+  </div>
+  <div class="kiosk-body">
+    <div class="kb-done-area">
+      <div class="kb-done-check">✓</div>
+      <div class="kb-done-title">무통장입금 완료</div>
+      <div class="kb-done-sub">입금이 정상 처리되었습니다</div>
+    </div>
+    <div class="kb-confirm-box">
+      <div class="kb-confirm-row"><span>받는 은행</span><span id="kb-cl-done-bank" style="font-weight:700;">-</span></div>
+      <div class="kb-confirm-row"><span>받는 계좌</span><span id="kb-cl-done-acc" style="font-weight:700;">-</span></div>
+      <div class="kb-confirm-row"><span>입금 금액</span><span class="kb-confirm-highlight" id="kb-cl-done-amt">-</span></div>
+      <div class="kb-confirm-row"><span>입금자명</span><span style="font-weight:700;">김 순 자</span></div>
+    </div>
+    <div class="kb-receipt-q">영수증을 출력하시겠습니까?</div>
+    <div style="display:flex;gap:10px;margin-bottom:14px;">
+      <button class="kb-yn-btn" onclick="toast('영수증을 출력합니다')">예</button>
+      <button class="kb-yn-btn kb-yn-no" onclick="toast('출력 안함')">아니오</button>
+    </div>
+  </div>
+  <div class="kiosk-footer">
+    <button class="btn-primary kb-btn" onclick="go('s-home')">🏠 거래 종료</button>
+    <button class="btn-secondary" onclick="resetKbAtm();go('s-atm-0')">🔄 다시 연습하기</button>
+  </div>
+</div>
+
+<!-- ATM BILL: 공과금 납부 -->
+<div class="screen" id="s-atm-bill">
+  <div class="kb-top">
+    <button class="back-btn kb-back" onclick="go('s-atm-0')">←</button>
+    <div class="kb-top-logo">★ KB국민은행</div>
+    <div class="kb-top-tag">공과금납부</div>
+  </div>
+  <div class="kiosk-body">
+    <div class="guide-chip"><span>🧾</span>카드 없이 이용 가능합니다. 고지서 바코드 스캔 또는 지로번호를 입력하세요.</div>
+    <div class="kb-section-label">납부 방법</div>
+    <div class="opt-list">
+      <button class="opt-item" onclick="selOpt(this,'billType','바코드');toast('바코드 스캐너에 고지서를 대어 주세요')">
+        <span class="opt-icon">📊</span>
+        <div class="opt-info"><div class="opt-name">바코드 스캔</div><div class="opt-sub">고지서의 바코드를 스캐너에 대세요</div></div>
+        <span class="opt-check">✓</span>
+      </button>
+      <button class="opt-item" onclick="selOpt(this,'billType','지로');toast('지로번호를 키패드로 입력해 주세요')">
+        <span class="opt-icon">🔢</span>
+        <div class="opt-info"><div class="opt-name">지로번호 입력</div><div class="opt-sub">고지서 하단의 숫자를 입력하세요</div></div>
+        <span class="opt-check">✓</span>
+      </button>
+    </div>
+    <div class="kb-section-label" style="margin-top:14px;">납부 가능 항목</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+      <div style="background:#FFF8E7;border:1.5px solid #FFB800;border-radius:12px;padding:11px 4px;text-align:center;font-size:12px;font-weight:700;color:#1A1F3B;">전기요금</div>
+      <div style="background:#FFF8E7;border:1.5px solid #FFB800;border-radius:12px;padding:11px 4px;text-align:center;font-size:12px;font-weight:700;color:#1A1F3B;">도시가스</div>
+      <div style="background:#FFF8E7;border:1.5px solid #FFB800;border-radius:12px;padding:11px 4px;text-align:center;font-size:12px;font-weight:700;color:#1A1F3B;">수도요금</div>
+      <div style="background:#FFF8E7;border:1.5px solid #FFB800;border-radius:12px;padding:11px 4px;text-align:center;font-size:12px;font-weight:700;color:#1A1F3B;">건강보험</div>
+      <div style="background:#FFF8E7;border:1.5px solid #FFB800;border-radius:12px;padding:11px 4px;text-align:center;font-size:12px;font-weight:700;color:#1A1F3B;">국민연금</div>
+      <div style="background:#FFF8E7;border:1.5px solid #FFB800;border-radius:12px;padding:11px 4px;text-align:center;font-size:12px;font-weight:700;color:#1A1F3B;">지방세</div>
+    </div>
+  </div>
+  <div class="kiosk-footer">
+    <button class="btn-primary kb-btn" onclick="toast('고지서를 스캐너에 대어주세요')">납부 진행 →</button>
+    <button class="btn-secondary" onclick="go('s-atm-0')">← 처음으로</button>
+  </div>
+</div>
+
+<!-- ════════════════ GOV ════════════════ -->
+<!-- GOV 1: 서비스 선택 -->
+<div class="screen" id="s-gov-1">
+  <div class="kiosk-top gov-top">
+    <button class="back-btn" onclick="go('s-home')">←</button>
+    <span class="kiosk-header-title">🏛️ 주민센터 무인민원</span>
+  </div>
+  <div class="steps"><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div><span class="step-label">서류 선택 (1/4)</span></div>
+  <div class="kiosk-body">
+    <div class="guide-chip"><span>📄</span>발급받으실 서류를 선택해 주세요</div>
+    <div class="opt-list">
+      <button class="opt-item" onclick="selOpt(this,'gov-doc','주민등록등본');setGovDoc('주민등록등본','본인의 주소 확인에 필요한 서류','500원')"><span class="opt-icon">📋</span><div class="opt-info"><div class="opt-name">주민등록등본</div><div class="opt-sub">주소·세대원 확인 · 수수료 500원</div></div><span class="opt-check">✓</span></button>
+      <button class="opt-item" onclick="selOpt(this,'gov-doc','가족관계증명서');setGovDoc('가족관계증명서','부모·자녀 관계를 증명하는 서류','1,000원')"><span class="opt-icon">👨‍👩‍👧</span><div class="opt-info"><div class="opt-name">가족관계증명서</div><div class="opt-sub">부모·자녀 확인 · 수수료 1,000원</div></div><span class="opt-check">✓</span></button>
+      <button class="opt-item" onclick="selOpt(this,'gov-doc','인감증명서');setGovDoc('인감증명서','인감 확인이 필요한 서류','600원')"><span class="opt-icon">🔏</span><div class="opt-info"><div class="opt-name">인감증명서</div><div class="opt-sub">거래·계약 시 필요 · 수수료 600원</div></div><span class="opt-check">✓</span></button>
+      <button class="opt-item" onclick="selOpt(this,'gov-doc','건강보험료납부확인서');setGovDoc('건강보험료납부확인서','보험료 납부 내역 확인','무료')"><span class="opt-icon">🏥</span><div class="opt-info"><div class="opt-name">건강보험료납부확인서</div><div class="opt-sub">보험료 납부 확인 · 무료</div></div><span class="opt-check">✓</span></button>
+    </div>
+  </div>
+  <div class="kiosk-footer"><button class="btn-primary" id="gov-btn1" disabled onclick="go('s-gov-2')">다음 →</button></div>
+</div>
+
+<!-- GOV 2: 부수 선택 -->
+<div class="screen" id="s-gov-2">
+  <div class="kiosk-top gov-top">
+    <button class="back-btn" onclick="go('s-gov-1')">←</button>
+    <span class="kiosk-header-title">📄 발급 부수 선택</span>
+  </div>
+  <div class="steps"><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div><span class="step-label">부수 선택 (2/4)</span></div>
+  <div class="kiosk-body">
+    <div class="guide-chip"><span>📄</span>몇 부 발급받으시겠어요?</div>
+    <div class="info-box" style="margin-bottom:16px;">
+      <div class="info-row"><span class="info-key">서류명</span><span class="info-val highlight" id="gov-doc-name">-</span></div>
+      <div class="info-row"><span class="info-key">용도</span><span class="info-val" id="gov-doc-desc">-</span></div>
+      <div class="info-row"><span class="info-key">1부당 수수료</span><span class="info-val" id="gov-doc-fee">-</span></div>
+    </div>
+    <div class="counter-row"><div><div class="counter-label">발급 부수</div><div class="counter-sub">최대 10부까지 가능</div></div><div class="counter-ctrl"><button class="c-btn" onclick="changeCount('gov-copies',-1)">−</button><span class="c-num" id="cnt-gov-copies">1</span><button class="c-btn" onclick="changeCount('gov-copies',1)">+</button></div></div>
+    <div class="total-row"><span class="total-label">총 수수료</span><span class="total-price" id="gov-total">₩500</span></div>
+  </div>
+  <div class="kiosk-footer"><button class="btn-primary" onclick="go('s-gov-3')">다음 →</button></div>
+</div>
+
+<!-- GOV 3: 본인 확인 -->
+<div class="screen" id="s-gov-3">
+  <div class="kiosk-top gov-top">
+    <button class="back-btn" onclick="go('s-gov-2')">←</button>
+    <span class="kiosk-header-title">🪪 본인 확인</span>
+  </div>
+  <div class="steps"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div><span class="step-label">본인 확인 (3/4)</span></div>
+  <div class="kiosk-body">
+    <div class="guide-chip"><span>🪪</span>주민등록증 또는 운전면허증을 스캔해 주세요</div>
+    <div class="opt-list">
+      <button class="opt-item selected" onclick="selOpt(this,'gov-id','주민등록증')"><span class="opt-icon">🪪</span><div class="opt-info"><div class="opt-name">주민등록증</div><div class="opt-sub">스캔대에 앞면이 보이도록 올려주세요</div></div><span class="opt-check">✓</span></button>
+      <button class="opt-item" onclick="selOpt(this,'gov-id','운전면허증')"><span class="opt-icon">🚗</span><div class="opt-info"><div class="opt-name">운전면허증</div><div class="opt-sub">스캔대에 앞면이 보이도록 올려주세요</div></div><span class="opt-check">✓</span></button>
+    </div>
+  </div>
+  <div class="kiosk-footer"><button class="btn-primary" onclick="go('s-gov-4')">결제하고 발급받기 →</button></div>
+</div>
+
+<!-- GOV 4: 발급 완료 -->
+<div class="screen" id="s-gov-4">
+  <div class="kiosk-top gov-top">
+    <span class="kiosk-header-title" style="margin-left:16px;">✅ 발급 완료</span>
+  </div>
+  <div class="steps"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div><span class="step-label">발급 완료 (4/4)</span></div>
+  <div class="kiosk-body">
+    <div class="receipt">
+      <div class="receipt-icon">🖨️</div>
+      <div class="receipt-title">서류가 출력됩니다!</div>
+      <div class="receipt-sub">아래 출력구에서<br>서류를 꺼내주세요</div>
+      <hr class="receipt-divider"/>
+      <div class="receipt-row"><span>서류명</span><span style="font-weight:700;" id="gov-result-doc">-</span></div>
+      <div class="receipt-row"><span>발급 부수</span><span style="font-weight:700;" id="gov-result-cnt">1부</span></div>
+      <div class="receipt-row total"><span>납부 금액</span><span id="gov-result-fee">₩500</span></div>
+    </div>
+    <div style="margin-top:16px;">
+      <div class="guide-chip"><span>🎊</span>서류 발급 완료! 출력구에서 서류를 꼭 챙기세요!</div>
+    </div>
+  </div>
+  <div class="kiosk-footer">
+    <button class="btn-primary" onclick="go('s-home')">🏠 처음으로 돌아가기</button>
+    <button class="btn-secondary" onclick="go('s-gov-1')">🔄 다시 연습하기</button>
+  </div>
+</div>
+
+<!-- ════════════════ PARKING ════════════════ -->
+<!-- PARK 1: 차량번호 입력 -->
+<div class="screen" id="s-park-1">
+  <div class="kiosk-top park-top">
+    <button class="back-btn" onclick="go('s-home')">←</button>
+    <span class="kiosk-header-title">🅿️ 주차 정산기</span>
+  </div>
+  <div class="steps"><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div><span class="step-label">차량번호 입력 (1/3)</span></div>
+  <div class="kiosk-body">
+    <div class="guide-chip"><span>🚗</span>차량 번호 뒤 4자리를 입력해 주세요</div>
+    <div class="plate-display">
+      <div class="plate-label">차량번호 (뒤 4자리)</div>
+      <div class="plate-number" id="plate-display">____<span class="cursor">|</span></div>
+    </div>
+    <div class="numpad" id="park-numpad"></div>
+  </div>
+</div>
+
+<!-- PARK 2: 주차 정보 확인 -->
+<div class="screen" id="s-park-2">
+  <div class="kiosk-top park-top">
+    <button class="back-btn" onclick="go('s-park-1')">←</button>
+    <span class="kiosk-header-title">🅿️ 주차 정보 확인</span>
+  </div>
+  <div class="steps"><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div><span class="step-label">정보 확인 (2/3)</span></div>
+  <div class="kiosk-body">
+    <div class="guide-chip"><span>✅</span>주차 정보를 확인해 주세요</div>
+    <div class="info-box">
+      <div class="info-row"><span class="info-key">차량 번호</span><span class="info-val highlight" id="park-plate-display">-</span></div>
+      <div class="info-row"><span class="info-key">입차 시간</span><span class="info-val" id="park-in-time">-</span></div>
+      <div class="info-row"><span class="info-key">현재 시간</span><span class="info-val" id="park-now-time">-</span></div>
+      <div class="info-row"><span class="info-key">주차 시간</span><span class="info-val">2시간 15분</span></div>
+    </div>
+    <div class="total-row"><span class="total-label">주차 요금</span><span class="total-price">₩3,000</span></div>
+    <div class="info-box" style="background:var(--primary-container);">
+      <div class="info-row"><span class="info-key" style="color:var(--on-primary-container);">💡 무료 출차 가능 시간</span><span class="info-val highlight">10분 이내</span></div>
+    </div>
+  </div>
+  <div class="kiosk-footer"><button class="btn-primary" onclick="go('s-park-3')">결제하기 →</button></div>
+</div>
+
+<!-- PARK 3: 결제 -->
+<div class="screen" id="s-park-3">
+  <div class="kiosk-top park-top">
+    <button class="back-btn" onclick="go('s-park-2')">←</button>
+    <span class="kiosk-header-title">💳 결제</span>
+  </div>
+  <div class="steps"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div><span class="step-label">결제 (3/3)</span></div>
+  <div class="kiosk-body">
+    <div class="guide-chip"><span>💳</span>결제 방법을 선택해 주세요</div>
+    <div class="pay-methods">
+      <button class="pay-method selected" id="park-pay-1" onclick="selPay('park',1)"><span class="pay-icon">💳</span><div><div class="pay-name">신용·체크카드</div><div class="pay-desc">카드를 투입구에 넣어주세요</div></div><span class="pay-check">✓</span></button>
+      <button class="pay-method" id="park-pay-2" onclick="selPay('park',2)"><span class="pay-icon">💵</span><div><div class="pay-name">현금</div><div class="pay-desc">지폐를 투입해 주세요</div></div><span class="pay-check">✓</span></button>
+      <button class="pay-method" id="park-pay-3" onclick="selPay('park',3)"><span class="pay-icon">📱</span><div><div class="pay-name">카카오페이·삼성페이</div><div class="pay-desc">QR코드를 스캔해 주세요</div></div><span class="pay-check">✓</span></button>
+    </div>
+    <div class="total-row"><span class="total-label">결제 금액</span><span class="total-price">₩3,000</span></div>
+  </div>
+  <div class="kiosk-footer">
+    <button class="btn-primary" onclick="go('s-park-done')">결제 완료 ✓</button>
+  </div>
+</div>
+
+<!-- PARK DONE -->
+<div class="screen" id="s-park-done">
+  <div class="kiosk-top park-top">
+    <span class="kiosk-header-title" style="margin-left:16px;">✅ 정산 완료</span>
+  </div>
+  <div class="kiosk-body">
+    <div class="receipt">
+      <div class="receipt-icon">🚗</div>
+      <div class="receipt-title">정산이 완료됐어요!</div>
+      <div class="receipt-sub">10분 이내에 출차해 주세요</div>
+      <hr class="receipt-divider"/>
+      <div class="receipt-row"><span>차량 번호</span><span style="font-weight:700;" id="park-done-plate">-</span></div>
+      <div class="receipt-row"><span>주차 시간</span><span style="font-weight:700;">2시간 15분</span></div>
+      <div class="receipt-row total"><span>결제 금액</span><span>₩3,000</span></div>
+    </div>
+    <div style="margin-top:16px;">
+      <div class="guide-chip"><span>⏰</span>10분 안에 출차하지 않으면 추가 요금이 발생해요!</div>
+    </div>
+  </div>
+  <div class="kiosk-footer">
+    <button class="btn-primary" onclick="go('s-home')">🏠 처음으로 돌아가기</button>
+    <button class="btn-secondary" onclick="resetPark();go('s-park-1')">🔄 다시 연습하기</button>
+  </div>
+</div>
+
+</div><!-- /phone -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ──
+const state = {
+  foodCart: {},          // {id: {name,price,qty,emoji}}
+  foodEatType: '매장',   // '매장' or '포장'
+  hospPurpose: '', hospDept: '',
+  transFrom: '', transTo: '',
+  transAdult:1, transYouth:0, transChild:0,
+  atmPin: '', atmAmount: 0,
+  govDoc: '', govDocDesc: '', govDocFee: 0, govCopies: 1,
+  parkPlate: '',
+  selPayFood: 1, selPayPark: 1
+};
+
+// ── FOOD DATA ──
+const foodMenu = {
+  '세트메뉴': [
+    {id:'bm',emoji:'🍔',name:'빅맥 세트',desc:'빅맥 + 감자튀김 + 콜라',price:8900},
+    {id:'ch',emoji:'🍗',name:'치킨버거 세트',desc:'치킨버거 + 감자튀김 + 콜라',price:7900},
+    {id:'sg',emoji:'🥩',name:'불고기버거 세트',desc:'불고기버거 + 감자튀김 + 콜라',price:7300},
+    {id:'sh',emoji:'🐟',name:'새우버거 세트',desc:'새우버거 + 감자튀김 + 아이스티',price:8500},
+  ],
+  '단품버거': [
+    {id:'bms',emoji:'🍔',name:'빅맥',desc:'두 장의 쇠고기 패티',price:5200},
+    {id:'chs',emoji:'🍗',name:'치킨버거',desc:'바삭한 치킨 패티',price:4800},
+    {id:'sgs',emoji:'🥩',name:'불고기버거',desc:'달콤한 불고기 소스',price:4500},
+  ],
+  '사이드': [
+    {id:'ff',emoji:'🍟',name:'감자튀김 (M)',desc:'바삭한 프렌치 프라이',price:2300},
+    {id:'cs',emoji:'🥗',name:'코울슬로',desc:'신선한 양배추 샐러드',price:1800},
+    {id:'ap',emoji:'🍎',name:'사과 슬라이스',desc:'건강한 과일 간식',price:1500},
+  ],
+  '음료': [
+    {id:'co',emoji:'🥤',name:'콜라 (M)',desc:'시원한 코카콜라',price:1900},
+    {id:'sp',emoji:'🧃',name:'스프라이트 (M)',desc:'청량한 스프라이트',price:1900},
+    {id:'ca',emoji:'☕',name:'아메리카노',desc:'진한 에스프레소',price:2500},
+    {id:'mc',emoji:'🍦',name:'맥플러리',desc:'소프트 아이스크림',price:3200},
+  ]
+};
+
+const stations = ['서울역','시청','을지로입구','동대문','동대문역사문화공원','신당','왕십리','성수','건대입구','강남','역삼','선릉','삼성','종합운동장','잠실','잠실새내'];
+
+// ── NAVIGATION ──
+function go(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(id);
+  if(el) { el.classList.add('active'); el.scrollTop = 0; }
+  // side effects
+  if(id === 's-food-1') { const el=document.getElementById('food-eat-type-label'); if(el) el.textContent=(state.foodEatType||'매장'); }
+  if(id === 's-food-2') renderCart();
+  if(id === 's-food-3') { document.getElementById('food-total3').textContent = fmt(getCartTotal()); const d=document.getElementById('food-eat-type-disp'); if(d) d.textContent=(state.foodEatType||'매장'); }
+  if(id === 's-food-4') renderOrderComplete();
+  if(id === 's-hosp-4') { document.getElementById('hosp-dept-display').textContent = state.hospDept || '내과'; document.getElementById('hosp-time').textContent = now(); }
+  if(id === 's-trans-2') renderArrList();
+  if(id === 's-trans-4') renderTransReceipt();
+  if(id === 's-park-2') renderParkInfo();
+  if(id === 's-park-done') document.getElementById('park-done-plate').textContent = '서울 ' + (state.parkPlate||'1234');
+  if(id === 's-gov-4') renderGovResult();
+  if(id === 's-atm-0') { updateKbClock(); }
+  if(id === 's-atm-menu') { updateKbClock(); const t=document.getElementById('kb-menu-time'); if(t){const d=new Date();t.textContent=`${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;} }
+  if(id === 's-atm-skim') { const t=document.getElementById('kb-skim-tag'); if(t) t.textContent=kbTxMode; }
+  if(id === 's-atm-card') { updateKbClock(); const el=document.getElementById('kb-card-tx-label'); if(el) el.textContent=kbTxMode; }
+  if(id === 's-atm-1') { kbPinStr=''; buildKbNumpad(); ['kb-d1','kb-d2','kb-d3','kb-d4'].forEach(id2=>{ const el=document.getElementById(id2); if(el) el.classList.remove('filled'); }); }
+  if(id === 's-atm-phishing') { /* voice phishing warning — no extra setup needed */ }
+  if(id === 's-atm-nocard-id') { kbNocardIdInput=''; buildKbNocardIdNumpad(); const d1=document.getElementById('kb-nocard-id-front-disp'); if(d1) d1.textContent='______'; const d2=document.getElementById('kb-nocard-id-back-disp'); if(d2) d2.textContent='●●●●●●●'; const n=document.getElementById('kb-nocard-id-next'); if(n) n.disabled=true; }
+  if(id === 's-atm-nocard-acc') { kbNocardAccInput=''; buildKbNocardAccNumpad(); const d=document.getElementById('kb-nocard-acc-disp'); if(d) d.textContent='통장번호를 입력하세요'; const n=document.getElementById('kb-nocard-acc-next'); if(n) n.disabled=true; }
+  if(id === 's-atm-3b') { kbTransAccInput=''; buildKbTransferNumpad(); const d=document.getElementById('kb-trans-acc-display'); if(d) d.textContent='계좌번호를 입력하세요'; const tn=document.getElementById('kb-trans-next'); if(tn) tn.disabled=true; }
+  if(id === 's-atm-5a') renderKbConfirm();
+  if(id === 's-atm-done') renderKbDone();
+  if(id === 's-atm-done-trans') renderKbTransDone();
+  if(id === 's-atm-cl-bank') { kbClAccInput=''; kbClAmt=0; }
+  if(id === 's-atm-cl-acc') { kbClAccInput=''; buildKbClNumpad(); const d=document.getElementById('kb-cl-acc-display'); if(d) d.textContent='계좌번호를 입력하세요'; const n=document.getElementById('kb-cl-acc-next'); if(n) n.disabled=true; const bd=document.getElementById('kb-cl-bank-disp'); if(bd) bd.textContent=kbClBank; }
+  if(id === 's-atm-cl-cash') { kbClAmt=0; document.querySelectorAll('#s-atm-cl-cash .kb-amount-btn').forEach(b=>b.classList.remove('selected')); const av=document.getElementById('kb-cl-amt-val'); if(av) av.textContent='금액을 선택하세요'; const cn=document.getElementById('kb-cl-cash-next'); if(cn) cn.disabled=true; }
+}
+
+function now() {
+  const d = new Date();
+  return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+}
+function fmt(n) { return '₩' + n.toLocaleString(); }
+
+// ── TOAST ──
+let toastT;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+// ── OPT SELECT ──
+function selOpt(btn, key, val) {
+  const parent = btn.closest('.opt-list');
+  parent.querySelectorAll('.opt-item').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  state[key] = val;
+  // enable next buttons
+  const map = { 'hosp-purpose':'hosp-btn1','hosp-dept':'hosp-btn2','gov-doc':'gov-btn1','trans-dep':'trans-btn1','trans-arr':'trans-btn2' };
+  if(map[key]) { document.getElementById(map[key]).disabled = false; }
+}
+
+// ── PAY SELECT ──
+function selPay(prefix, n) {
+  for(let i=1;i<=3;i++) {
+    const el = document.getElementById(prefix+'-pay-'+i);
+    if(el) el.classList.toggle('selected', i===n);
+  }
+  state['selPay'+prefix] = n;
+}
+
+// ── FOOD ──
+function initFoodTabs() {
+  const tabs = document.getElementById('food-tabs');
+  tabs.innerHTML = '';
+  Object.keys(foodMenu).forEach((cat,i) => {
+    const b = document.createElement('button');
+    b.className = 'tab-btn' + (i===0?' active':'');
+    b.textContent = cat;
+    b.onclick = () => { document.querySelectorAll('.tab-btn').forEach(t=>t.classList.remove('active')); b.classList.add('active'); renderMenuItems(cat); };
+    tabs.appendChild(b);
+  });
+  renderMenuItems(Object.keys(foodMenu)[0]);
+}
+
+function renderMenuItems(cat) {
+  const list = document.getElementById('food-menu-list');
+  list.innerHTML = '';
+  foodMenu[cat].forEach(item => {
+    const qty = state.foodCart[item.id]?.qty || 0;
+    const div = document.createElement('div');
+    div.className = 'menu-item';
+    div.innerHTML = `<div class="menu-item-emoji">${item.emoji}</div><div class="menu-item-info"><div class="menu-item-name">${item.name}</div><div class="menu-item-desc">${item.desc}</div></div><div class="menu-item-price">${fmt(item.price)}</div><button class="menu-item-add" onclick="addToCart('${item.id}','${item.name}',${item.price},'${item.emoji}','${cat}')">+</button>`;
+    list.appendChild(div);
+  });
+}
+
+function addToCart(id, name, price, emoji, cat) {
+  if(!state.foodCart[id]) state.foodCart[id] = {name,price,emoji,qty:0};
+  state.foodCart[id].qty++;
+  updateCartBar();
+  renderMenuItems(cat);
+  toast(`🛒 ${name} 담았어요!`);
+}
+
+function updateCartBar() {
+  const total = getCartTotal();
+  const count = Object.values(state.foodCart).reduce((a,v)=>a+v.qty,0);
+  const bar = document.getElementById('food-cart-bar');
+  if(count > 0) {
+    bar.style.display = '';
+    document.getElementById('food-cart-count').textContent = `${count}개 담음`;
+    document.getElementById('food-cart-total').textContent = fmt(total);
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function getCartTotal() { return Object.values(state.foodCart).reduce((a,v)=>a+v.price*v.qty,0); }
+
+function renderCart() {
+  const list = document.getElementById('food-cart-list');
+  list.innerHTML = '';
+  const items = Object.entries(state.foodCart).filter(([,v])=>v.qty>0);
+  if(items.length === 0) { list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--on-surface-variant);font-size:16px;">장바구니가 비어있어요<br>메뉴를 선택해 주세요</div>'; }
+  items.forEach(([id,item]) => {
+    const div = document.createElement('div');
+    div.className = 'cart-item';
+    div.innerHTML = `<span class="cart-item-emoji">${item.emoji}</span><div class="cart-item-info"><div class="cart-item-name">${item.name}</div><div class="cart-item-price">${fmt(item.price)} × ${item.qty} = ${fmt(item.price*item.qty)}</div></div><div class="cart-item-qty"><button class="qty-btn" onclick="changeQty('${id}',-1)">−</button><span class="qty-num">${item.qty}</span><button class="qty-btn" onclick="changeQty('${id}',1)">+</button></div>`;
+    list.appendChild(div);
+  });
+  document.getElementById('food-total2').textContent = fmt(getCartTotal());
+}
+
+function changeQty(id, d) {
+  state.foodCart[id].qty = Math.max(0, state.foodCart[id].qty + d);
+  if(state.foodCart[id].qty === 0) delete state.foodCart[id];
+  renderCart(); updateCartBar();
+}
+
+function renderOrderComplete() {
+  const num = Math.floor(Math.random()*50)+10;
+  document.getElementById('food-order-num').textContent = num;
+  const items = document.getElementById('food-receipt-items');
+  items.innerHTML = '';
+  Object.values(state.foodCart).filter(v=>v.qty>0).forEach(item => {
+    const d = document.createElement('div');
+    d.className = 'receipt-row';
+    d.innerHTML = `<span>${item.emoji} ${item.name} ×${item.qty}</span><span style="font-weight:600;">${fmt(item.price*item.qty)}</span>`;
+    items.appendChild(d);
+  });
+  document.getElementById('food-total4').textContent = fmt(getCartTotal());
+}
+
+function resetFood() { state.foodCart = {}; state.foodEatType='매장'; updateCartBar(); initFoodTabs(); }
+
+// ── GOV ──
+function setGovDoc(name, desc, fee) {
+  state.govDoc = name; state.govDocDesc = desc; state.govDocFee = fee;
+  document.getElementById('gov-doc-name').textContent = name;
+  document.getElementById('gov-doc-desc').textContent = desc;
+  document.getElementById('gov-doc-fee').textContent = fee;
+}
+
+function renderGovResult() {
+  document.getElementById('gov-result-doc').textContent = state.govDoc || '주민등록등본';
+  document.getElementById('gov-result-cnt').textContent = (state.govCopies || 1) + '부';
+  document.getElementById('gov-result-fee').textContent = state.govDocFee || '₩500';
+}
+
+// ── TRANS ──
+function renderDepList() {
+  const list = document.getElementById('dep-list');
+  list.innerHTML = '';
+  stations.slice(0,10).forEach(s => {
+    const btn = document.createElement('button');
+    btn.className = 'station-item';
+    btn.innerHTML = `<div><div class="station-name">${s}</div><div class="station-line">수도권 지하철</div></div><span class="station-check">✓</span>`;
+    btn.onclick = () => {
+      document.querySelectorAll('#dep-list .station-item').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      state.transFrom = s;
+      document.getElementById('trans-btn1').disabled = false;
+    };
+    list.appendChild(btn);
+  });
+}
+
+function renderArrList() {
+  const list = document.getElementById('arr-list');
+  list.innerHTML = '';
+  stations.filter(s => s !== state.transFrom).forEach(s => {
+    const btn = document.createElement('button');
+    btn.className = 'station-item';
+    btn.innerHTML = `<div><div class="station-name">${s}</div><div class="station-line">수도권 지하철</div></div><span class="station-check">✓</span>`;
+    btn.onclick = () => {
+      document.querySelectorAll('#arr-list .station-item').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      state.transTo = s;
+      document.getElementById('trans-btn2').disabled = false;
+    };
+    list.appendChild(btn);
+  });
+}
+
+function changeCount(key, d) {
+  const el = document.getElementById('cnt-' + key);
+  if(!el) return;
+  let cur = parseInt(el.textContent);
+  cur = Math.max(0, cur + d);
+  if(key === 'adult') cur = Math.max(1, cur);
+  el.textContent = cur;
+  if(key === 'adult') state.transAdult = cur;
+  if(key === 'youth') state.transYouth = cur;
+  if(key === 'child') state.transChild = cur;
+  if(key === 'gov-copies') { state.govCopies = cur; updateGovTotal(); }
+  updateTransTotal();
+}
+
+function updateTransTotal() {
+  const t = (state.transAdult||1)*1400 + (state.transYouth||0)*720 + (state.transChild||0)*450;
+  document.getElementById('trans-total').textContent = fmt(t);
+}
+
+function renderTransReceipt() {
+  document.getElementById('trans-dep-display').textContent = state.transFrom || '서울역';
+  document.getElementById('trans-arr-display').textContent = state.transTo || '강남';
+  const adult = state.transAdult||1, youth=state.transYouth||0, child=state.transChild||0;
+  let pax = `어른 ${adult}명`;
+  if(youth>0) pax += ` · 청소년 ${youth}명`;
+  if(child>0) pax += ` · 어린이 ${child}명`;
+  document.getElementById('trans-pax-display').textContent = pax;
+  const t = adult*1400 + youth*720 + child*450;
+  document.getElementById('trans-total2').textContent = fmt(t);
+}
+
+function resetTrans() { state.transFrom=''; state.transTo=''; state.transAdult=1; state.transYouth=0; state.transChild=0; document.getElementById('cnt-adult').textContent=1; document.getElementById('cnt-youth').textContent=0; document.getElementById('cnt-child').textContent=0; updateTransTotal(); renderDepList(); }
+
+// ── GOV TOTAL ──
+const govFeeMap = {'주민등록등본':500,'가족관계증명서':1000,'인감증명서':600,'건강보험료납부확인서':0};
+function updateGovTotal() {
+  const fee = govFeeMap[state.govDoc] || 500;
+  const total = fee * (state.govCopies || 1);
+  document.getElementById('gov-total').textContent = total === 0 ? '무료' : fmt(total);
+}
+
+// ── KB ATM ──
+let kbPinStr = '';
+let kbPinBackScreen = 's-atm-card'; // 출금: s-atm-5a, 기타: s-atm-card
+let kbNocardIdInput = '';   // 무통장무카드: 주민번호 입력값
+let kbNocardAccInput = '';  // 무통장무카드: 통장번호 입력값
+let kbTransAccInput = '';
+let kbSelectedAcc = 0;
+let kbSelectedAmt = 0;
+let kbTransAmt = 0;
+let kbSelectedNote = 1;
+let kbTransBank = 'KB국민은행';
+let kbTxMode = '출금'; // 선택된 거래 종류
+let kbClBank = 'KB국민은행';
+let kbClAccInput = '';
+let kbClAmt = 0;
+
+function kbSelectTx(mode) {
+  kbTxMode = mode;
+  const el = document.getElementById('kb-card-tx-label');
+  if(el) el.textContent = mode;
+}
+
+function renderKbSubtype() {
+  const tag = document.getElementById('kb-subtype-tag');
+  if(tag) tag.textContent = kbTxMode;
+  const list = document.getElementById('kb-subtype-list');
+  if(!list) return;
+  list.innerHTML = '';
+  const opts = kbTxMode === '출금' ? [
+    {icon:'💳', name:'카드 출금', sub:'체크·신용카드를 투입구에 넣으세요', dest:'s-atm-card'},
+    {icon:'📒', name:'통장 출금', sub:'통장을 투입구에 넣으세요', dest:'s-atm-card'},
+    {icon:'🪪', name:'무통장·무카드 출금', sub:'카드 없이 주민번호+통장번호로 출금', dest:'s-atm-nocard-id', nocard:true},
+    {icon:'📱', name:'리브 NEXT 출금', sub:'리브 앱 인증 후 출금', dest:'s-atm-card'},
+  ] : kbTxMode === '이체' ? [
+    {icon:'💳', name:'카드 이체', sub:'카드 인증 후 이체', dest:'s-atm-card'},
+    {icon:'📒', name:'통장 이체', sub:'통장 투입 후 이체', dest:'s-atm-card'},
+  ] : kbTxMode === '입금' ? [
+    {icon:'💳', name:'카드 입금', sub:'카드 인증 후 입금', dest:'s-atm-card'},
+    {icon:'📒', name:'통장 입금', sub:'통장 투입 후 입금', dest:'s-atm-card'},
+  ] : [
+    {icon:'💳', name:'카드 조회', sub:'카드 인증 후 잔액·내역 조회', dest:'s-atm-card'},
+    {icon:'📒', name:'통장 조회', sub:'통장 투입 후 조회', dest:'s-atm-card'},
+  ];
+  opts.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-item';
+    btn.innerHTML = `<span class="opt-icon">${opt.icon}</span><div class="opt-info"><div class="opt-name">${opt.name}</div><div class="opt-sub">${opt.sub}</div></div><span style="font-size:22px;color:var(--primary);">→</span>`;
+    btn.onclick = () => {
+      if(opt.nocard) { kbNocardIdInput=''; kbNocardAccInput=''; go(opt.dest); return; }
+      // For 이체/입금/잔액조회: PIN comes after card, before transaction
+      if(kbTxMode !== '출금') kbPinBackScreen = 's-atm-card';
+      go(opt.dest);
+    };
+    list.appendChild(btn);
+  });
+}
+
+// ── 무통장·무카드: 주민번호 키패드 ──
+function buildKbNocardIdNumpad() {
+  const pad = document.getElementById('kb-nocard-id-numpad');
+  if(!pad) return;
+  pad.innerHTML = '';
+  const layout = ['1','2','3','4','5','6','7','8','9','삭제','0','확인'];
+  layout.forEach(n => {
+    const btn = document.createElement('button');
+    btn.className = 'kb-num-key' + (n==='삭제'?' kb-del':'') + (n==='확인'?' kb-confirm-key':'');
+    btn.textContent = n;
+    btn.onclick = () => kbNocardIdInput_handler(n);
+    pad.appendChild(btn);
+  });
+}
+
+function kbNocardIdInput_handler(k) {
+  if(k === '삭제') { kbNocardIdInput = kbNocardIdInput.slice(0,-1); }
+  else if(k === '확인') {
+    if(kbNocardIdInput.length < 13) { toast('⚠️ 주민번호 13자리를 모두 입력해 주세요'); return; }
+    const next = document.getElementById('kb-nocard-id-next');
+    if(next) next.disabled = false;
+    toast('✅ 주민번호 확인됐어요');
+    return;
+  } else if(kbNocardIdInput.length < 13) { kbNocardIdInput += k; }
+  // 표시: 앞 6자리는 보여주고, 뒷 7자리는 ●로 마스킹
+  const front = kbNocardIdInput.slice(0,6).padEnd(6,'_');
+  const back = kbNocardIdInput.slice(6).replace(/./g,'●').padEnd(7,'●');
+  const d1 = document.getElementById('kb-nocard-id-front-disp');
+  const d2 = document.getElementById('kb-nocard-id-back-disp');
+  if(d1) d1.textContent = front;
+  if(d2) d2.textContent = back;
+  const next = document.getElementById('kb-nocard-id-next');
+  if(next) next.disabled = kbNocardIdInput.length < 13;
+}
+
+// ── 무통장·무카드: 통장번호 키패드 ──
+function buildKbNocardAccNumpad() {
+  const pad = document.getElementById('kb-nocard-acc-numpad');
+  if(!pad) return;
+  pad.innerHTML = '';
+  const layout = ['1','2','3','4','5','6','7','8','9','삭제','0','확인'];
+  layout.forEach(n => {
+    const btn = document.createElement('button');
+    btn.className = 'kb-num-key' + (n==='삭제'?' kb-del':'') + (n==='확인'?' kb-confirm-key':'');
+    btn.textContent = n;
+    btn.onclick = () => kbNocardAccInput_handler(n);
+    pad.appendChild(btn);
+  });
+}
+
+function kbNocardAccInput_handler(k) {
+  if(k === '삭제') { kbNocardAccInput = kbNocardAccInput.slice(0,-1); }
+  else if(k === '확인') {
+    if(kbNocardAccInput.length < 10) { toast('⚠️ 통장번호를 정확히 입력해 주세요 (10자리 이상)'); return; }
+    const next = document.getElementById('kb-nocard-acc-next');
+    if(next) next.disabled = false;
+    toast('✅ 통장번호 확인됐어요');
+    return;
+  } else if(kbNocardAccInput.length < 14) { kbNocardAccInput += k; }
+  const disp = document.getElementById('kb-nocard-acc-disp');
+  if(disp) {
+    const acc = kbNocardAccInput;
+    // 포맷: 최대 14자리, 하이픈 없이 표시
+    disp.textContent = acc.length > 0 ? acc : '통장번호를 입력하세요';
+  }
+  const next = document.getElementById('kb-nocard-acc-next');
+  if(next) next.disabled = kbNocardAccInput.length < 10;
+}
+
+// 무통장무카드 → 금액선택으로 넘어갈 때 계좌 표시 설정
+function kbNocardSetupAmt() {
+  kbPinBackScreen = 's-atm-5a';
+  // 계좌 표시에 입력한 통장번호 반영
+  const accEl = document.getElementById('kb-confirm-acc');
+  if(accEl) accEl.textContent = kbNocardAccInput || '입력한 통장번호';
+  // 출금 계좌 선택을 1번으로 고정 (무통장 전용 계좌)
+  kbSelectedAcc = 1;
+  // 금액 선택 초기화
+  kbSelectedAmt = 0;
+  document.querySelectorAll('#s-atm-4a .kb-amount-btn').forEach(b=>b.classList.remove('selected'));
+  const av = document.getElementById('kb-amt-val'); if(av) av.textContent='금액을 선택하세요';
+  const an = document.getElementById('kb-amt-next'); if(an) an.disabled=true;
+}
+
+function buildKbNumpad() {
+  const pad = document.getElementById('kb-numpad');
+  if(!pad) return;
+  pad.innerHTML = '';
+  // Shuffle 0-9, then arrange: 9 nums + 정정 + 1 num + 확인
+  const nums = ['1','2','3','4','5','6','7','8','9','0'].sort(() => Math.random() - 0.5);
+  const layout = [...nums.slice(0,9), '정정', nums[9], '확인'];
+  layout.forEach(n => {
+    const btn = document.createElement('button');
+    btn.className = 'kb-num-key' + (n==='정정'?' kb-del':'') + (n==='확인'?' kb-confirm-key':'');
+    btn.textContent = n;
+    btn.onclick = () => kbPinInput(n);
+    pad.appendChild(btn);
+  });
+}
+
+function kbPinInput(k) {
+  if(k === '정정') { kbPinStr = kbPinStr.slice(0,-1); }
+  else if(k === '확인') {
+    if(kbPinStr.length < 4) { toast('⚠️ 비밀번호 4자리를 모두 입력해 주세요'); return; }
+    toast('비밀번호 확인 중...');
+    // 출금: PIN came after amount confirm → go to cash-out
+    // 기타: PIN came after card insert → go to transaction screen
+    if(kbTxMode === '출금') {
+      setTimeout(() => go('s-atm-cash-out'), 800);
+    } else {
+      const dest = {이체:'s-atm-3b', 입금:'s-atm-3c', 잔액조회:'s-atm-3d'};
+      setTimeout(() => go(dest[kbTxMode] || 's-atm-3b'), 800);
+    }
+    return;
+  } else if(kbPinStr.length < 4) { kbPinStr += k; }
+  ['kb-d1','kb-d2','kb-d3','kb-d4'].forEach((id,i) => {
+    const el = document.getElementById(id);
+    if(el) el.classList.toggle('filled', i < kbPinStr.length);
+  });
+}
+
+function selKbAcc(n) {
+  kbSelectedAcc = n;
+  for(let i=1;i<=2;i++) {
+    const el = document.getElementById('kb-acc-'+i);
+    if(el) el.classList.toggle('selected', i===n);
+  }
+  document.getElementById('kb-acc-next').disabled = false;
+}
+
+function selNote(n) {
+  kbSelectedNote = n;
+  [1,2,3].forEach(i => {
+    const el = document.getElementById('kb-note-'+i);
+    if(el) el.classList.toggle('selected', i===n);
+  });
+}
+
+function selKbAmt(btn, val) {
+  document.querySelectorAll('.kb-amount-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  kbSelectedAmt = val;
+  const el = document.getElementById('kb-amt-val');
+  if(el) el.textContent = fmt(val);
+  const next = document.getElementById('kb-amt-next');
+  if(next) next.disabled = false;
+}
+
+function selKbTransAmt(btn, val) {
+  document.querySelectorAll('#s-atm-3b-2 .kb-amount-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  kbTransAmt = val;
+  const el = document.getElementById('kb-trans-amt-val');
+  if(el) el.textContent = fmt(val);
+  const next = document.getElementById('kb-trans-confirm');
+  if(next) next.disabled = false;
+}
+
+function selKbBank(btn, name) {
+  kbTransBank = name;
+  document.querySelectorAll('.kb-bank-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+function buildKbTransferNumpad() {
+  const pad = document.getElementById('kb-transfer-numpad');
+  if(!pad) return;
+  pad.innerHTML = '';
+  const layout = ['1','2','3','4','5','6','7','8','9','삭제','0','확인'];
+  layout.forEach(n => {
+    const btn = document.createElement('button');
+    btn.className = 'kb-num-key' + (n==='삭제'?' kb-del':'') + (n==='확인'?' kb-confirm-key':'');
+    btn.textContent = n;
+    btn.onclick = () => kbTransferInput(n);
+    pad.appendChild(btn);
+  });
+}
+
+function kbTransferInput(k) {
+  if(k==='삭제') { kbTransAccInput = kbTransAccInput.slice(0,-1); }
+  else if(k==='확인') {
+    if(kbTransAccInput.length < 10) { toast('⚠️ 계좌번호를 정확히 입력해 주세요'); return; }
+    const el1 = document.getElementById('kb-trans-bank-disp');
+    const el2 = document.getElementById('kb-trans-acc-disp');
+    if(el1) el1.textContent = kbTransBank;
+    const acc = kbTransAccInput;
+    const fmt2 = acc.length>=12 ? `${acc.slice(0,3)}-${acc.slice(3,5)}-${acc.slice(5)}` : acc;
+    if(el2) el2.textContent = fmt2;
+    document.getElementById('kb-trans-next').disabled = false;
+    toast('✅ 계좌번호 확인됐어요');
+    return;
+  } else if(kbTransAccInput.length < 14) { kbTransAccInput += k; }
+  const disp = document.getElementById('kb-trans-acc-display');
+  if(disp) disp.textContent = kbTransAccInput || '계좌번호를 입력하세요';
+}
+
+// ── KB ATM CARDLESS (무통장입금) ──
+function selKbClBank(btn, name) {
+  kbClBank = name;
+  document.querySelectorAll('#kb-cl-bank-grid .kb-bank-btn, #s-atm-cl-bank .kb-bank-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  const d = document.getElementById('kb-cl-bank-disp'); if(d) d.textContent = name;
+}
+
+function buildKbClNumpad() {
+  const pad = document.getElementById('kb-cl-numpad');
+  if(!pad) return;
+  pad.innerHTML = '';
+  ['1','2','3','4','5','6','7','8','9','삭제','0','확인'].forEach(n => {
+    const btn = document.createElement('button');
+    btn.className = 'kb-num-key' + (n==='삭제'?' kb-del':'') + (n==='확인'?' kb-confirm-key':'');
+    btn.textContent = n;
+    btn.onclick = () => kbClAccInputFn(n);
+    pad.appendChild(btn);
+  });
+}
+
+function kbClAccInputFn(k) {
+  if(k==='삭제') { kbClAccInput = kbClAccInput.slice(0,-1); }
+  else if(k==='확인') {
+    if(kbClAccInput.length < 10) { toast('⚠️ 계좌번호를 정확히 입력해 주세요'); return; }
+    const acc = kbClAccInput;
+    const fmt2 = acc.length>=12 ? `${acc.slice(0,3)}-${acc.slice(3,5)}-${acc.slice(5)}` : acc;
+    const d2 = document.getElementById('kb-cl-acc-disp2'); if(d2) d2.textContent = fmt2;
+    const d3 = document.getElementById('kb-cl-bank-disp2'); if(d3) d3.textContent = kbClBank;
+    document.getElementById('kb-cl-acc-next').disabled = false;
+    toast('✅ 계좌번호 확인됐어요');
+    return;
+  } else if(kbClAccInput.length < 14) { kbClAccInput += k; }
+  const disp = document.getElementById('kb-cl-acc-display');
+  if(disp) disp.textContent = kbClAccInput || '계좌번호를 입력하세요';
+}
+
+function selKbClAmt(btn, val) {
+  document.querySelectorAll('#s-atm-cl-cash .kb-amount-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  kbClAmt = val;
+  const el = document.getElementById('kb-cl-amt-val'); if(el) el.textContent = fmt(val);
+  const next = document.getElementById('kb-cl-cash-next'); if(next) next.disabled = false;
+}
+
+function renderKbClDone() {
+  const acc = kbClAccInput;
+  const fmt2 = acc.length>=12 ? `${acc.slice(0,3)}-${acc.slice(3,5)}-${acc.slice(5)}` : (acc||'-');
+  const b = document.getElementById('kb-cl-done-bank'); if(b) b.textContent = kbClBank;
+  const a = document.getElementById('kb-cl-done-acc'); if(a) a.textContent = fmt2;
+  const m = document.getElementById('kb-cl-done-amt'); if(m) m.textContent = fmt(kbClAmt);
+}
+
+function renderKbConfirm() {
+  const accEl = document.getElementById('kb-confirm-acc');
+  const amtEl = document.getElementById('kb-confirm-amt');
+  const remEl = document.getElementById('kb-confirm-remain');
+  const el50k = document.getElementById('kb-confirm-50k');
+  const el10k = document.getElementById('kb-confirm-10k');
+  const bals = [1245800, 8560000];
+  const bal = bals[kbSelectedAcc-1] || 1245800;
+  if(accEl) accEl.textContent = kbSelectedAcc===2 ? '234-56-789012' : '123-45-678901';
+  if(amtEl) amtEl.textContent = fmt(kbSelectedAmt);
+  if(remEl) remEl.textContent = fmt(bal - kbSelectedAmt);
+  // Calculate denomination breakdown
+  const n50 = Math.floor(kbSelectedAmt / 50000);
+  const n10 = Math.floor((kbSelectedAmt % 50000) / 10000);
+  if(el50k) el50k.textContent = n50 > 0 ? `${n50}장` : '-';
+  if(el10k) el10k.textContent = n10 > 0 ? `${n10}장` : '-';
+}
+
+function renderKbDone() {
+  const amtEl = document.getElementById('kb-done-amt');
+  const remEl = document.getElementById('kb-done-remain');
+  const timeEl = document.getElementById('kb-done-time');
+  const bals = [1245800, 8560000];
+  const bal = bals[kbSelectedAcc-1] || 1245800;
+  if(amtEl) amtEl.textContent = fmt(kbSelectedAmt);
+  if(remEl) remEl.textContent = fmt(bal - kbSelectedAmt);
+  if(timeEl) { const d=new Date(); timeEl.textContent=`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${now()}`; }
+}
+
+function renderKbTransDone() {
+  const bankEl = document.getElementById('kb-trans-done-bank');
+  const accEl = document.getElementById('kb-trans-done-acc');
+  const amtEl = document.getElementById('kb-trans-done-amt');
+  const el2 = document.getElementById('kb-trans-acc-disp');
+  if(bankEl) bankEl.textContent = kbTransBank;
+  if(accEl) accEl.textContent = el2 ? el2.textContent : '012-34-567890';
+  if(amtEl) amtEl.textContent = fmt(kbTransAmt);
+}
+
+function updateKbClock() {
+  const d = new Date();
+  const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+  const timeStr = now();
+  const full = `${dateStr}  ${timeStr}`;
+  ['kb-clock','kb-top-time','kb-top-time2','kb-card-clock'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.textContent = full;
+  });
+  const ch = document.getElementById('kb-clock-home'); if(ch) ch.textContent = timeStr;
+  const dh = document.getElementById('kb-date-home'); if(dh) dh.textContent = dateStr;
+}
+setInterval(updateKbClock, 1000);
+updateKbClock();
+
+function resetKbAtm() {
+  kbPinStr=''; kbPinBackScreen='s-atm-card'; kbTransAccInput=''; kbSelectedAcc=0; kbSelectedAmt=0; kbTransAmt=0; kbSelectedNote=1;
+  kbTxMode='출금'; kbClBank='KB국민은행'; kbClAccInput=''; kbClAmt=0;
+  kbNocardIdInput=''; kbNocardAccInput='';
+  const an = document.getElementById('kb-acc-next'); if(an) an.disabled=true;
+  document.querySelectorAll('.kb-account-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('.kb-amount-btn').forEach(b => b.classList.remove('selected'));
+  const av = document.getElementById('kb-amt-val'); if(av) av.textContent='금액을 선택하세요';
+  const amn = document.getElementById('kb-amt-next'); if(amn) amn.disabled=true;
+  kbSelectedNote=1; selNote(1);
+}
+
+// ── PARK ──
+let parkPlateStr = '';
+function buildParkNumpad() {
+  const pad = document.getElementById('park-numpad');
+  pad.innerHTML = '';
+  const nums = ['1','2','3','4','5','6','7','8','9','삭제','0','확인'];
+  nums.forEach(n => {
+    const btn = document.createElement('button');
+    btn.className = 'num-key' + (n==='삭제'?' del':'') + (n==='확인'?' confirm':'');
+    btn.textContent = n;
+    btn.onclick = () => parkPlateInput(n);
+    pad.appendChild(btn);
+  });
+}
+
+function parkPlateInput(k) {
+  if(k==='삭제') { parkPlateStr = parkPlateStr.slice(0,-1); }
+  else if(k==='확인') {
+    if(parkPlateStr.length < 4) { toast('⚠️ 4자리를 모두 입력해 주세요'); return; }
+    state.parkPlate = parkPlateStr;
+    go('s-park-2');
+    return;
+  } else if(parkPlateStr.length < 4) { parkPlateStr += k; }
+  const display = parkPlateStr.padEnd(4,'_');
+  document.getElementById('plate-display').innerHTML = display + '<span class="cursor">|</span>';
+}
+
+function renderParkInfo() {
+  document.getElementById('park-plate-display').textContent = '서울 가 ' + (state.parkPlate || '1234');
+  const inH = new Date(); inH.setHours(inH.getHours()-2); inH.setMinutes(inH.getMinutes()-15);
+  document.getElementById('park-in-time').textContent = `${inH.getHours().toString().padStart(2,'0')}:${inH.getMinutes().toString().padStart(2,'0')}`;
+  document.getElementById('park-now-time').textContent = now();
+}
+
+function resetPark() { parkPlateStr=''; state.parkPlate=''; document.getElementById('plate-display').innerHTML = '____<span class="cursor">|</span>'; }
+
+// ── INIT ──
+initFoodTabs();
+renderDepList();
+buildAtmNumpad();
+buildParkNumpad();
+
+// hospital time on load
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('hosp-time').textContent = now();
+});
+</script>
+</body>
+</html>
